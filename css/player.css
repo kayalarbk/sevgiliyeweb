@@ -1,0 +1,229 @@
+/* ═══════════════════════════════════════════════════
+   player.css — Fixed bottom music player bar
+════════════════════════════════════════════════════ */
+
+/* ── Bar container (column layout: progress on top, controls below) ── */
+.player-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--z-player);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 20px 12px;
+  background: rgba(16, 5, 13, 0.88);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-top: 1px solid var(--color-border);
+  box-shadow: 0 -4px 28px rgba(0, 0, 0, 0.45);
+}
+
+/* ── Progress / seek row ── */
+.player-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.player-time {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  min-width: 30px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Seek bar (range input) */
+.player-progress {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--color-border);
+  outline: none;
+  cursor: pointer;
+  position: relative;
+  transition: height var(--transition-fast);
+}
+
+.player-progress:hover {
+  height: 6px;
+}
+
+/* Thumb */
+.player-progress::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  box-shadow: 0 0 6px rgba(233, 30, 140, 0.5);
+  cursor: pointer;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+.player-progress::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  border: none;
+  box-shadow: 0 0 6px rgba(233, 30, 140, 0.5);
+  cursor: pointer;
+}
+.player-progress:hover::-webkit-slider-thumb {
+  transform: scale(1.25);
+  box-shadow: 0 0 10px rgba(233, 30, 140, 0.7);
+}
+
+/* Filled portion via background gradient — updated by JS on timeupdate */
+.player-progress::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background: transparent;
+}
+
+/* ── Main controls row ── */
+.player-main-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+}
+
+/* ── Track name ── */
+.player-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.player-track-name {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.04em;
+  transition: color var(--transition-base);
+}
+
+.player-track-name.playing {
+  color: var(--color-primary-light);
+}
+
+/* ── Control buttons row ── */
+.player-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.player-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-size: 0.9rem;
+  user-select: none;
+  transition:
+    background var(--transition-fast),
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.player-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  transform: scale(1.1);
+}
+
+.player-btn:active {
+  transform: scale(0.95);
+}
+
+/* Play/pause button — larger & coloured */
+.player-btn-main {
+  width: 46px;
+  height: 46px;
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  font-size: 1.05rem;
+}
+
+.player-btn-main:hover {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-glow);
+  transform: scale(1.08);
+}
+
+/* Pulse ring while playing */
+.player-btn-main.playing {
+  animation: player-pulse 2s ease-in-out infinite;
+}
+
+@keyframes player-pulse {
+  0%, 100% { box-shadow: 0 0 0 0   rgba(233, 30, 140, 0.55); }
+  50%       { box-shadow: 0 0 0 10px rgba(233, 30, 140, 0);   }
+}
+
+/* ── Upload label ── */
+.player-upload {
+  flex-shrink: 0;
+}
+
+.player-upload-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 15px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  font-size: 0.79rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.player-upload-label:hover {
+  background: rgba(255, 255, 255, 0.11);
+  color: var(--color-text);
+  transform: translateY(-1px);
+}
+
+/* ── Responsive: compact on small screens ── */
+@media (max-width: 480px) {
+  .player-bar {
+    padding: 8px 12px 10px;
+    gap: 5px;
+  }
+
+  .player-main-row {
+    gap: 8px;
+  }
+
+  .player-info {
+    max-width: 80px;
+  }
+
+  .player-upload-label {
+    font-size: 0.72rem;
+    padding: 6px 10px;
+  }
+}

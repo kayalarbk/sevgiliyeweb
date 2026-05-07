@@ -1,0 +1,79 @@
+/* ═══════════════════════════════════════════════════
+   quotes.css — Fixed bottom-right romantic quote widget
+════════════════════════════════════════════════════ */
+
+/* ── Widget container ── */
+.quotes-widget {
+  position: fixed;
+  bottom: 122px;    /* sits above the taller two-row player bar */
+  right: 16px;
+  z-index: var(--z-quotes);
+  width: clamp(210px, 26vw, 300px);
+  background: rgba(16, 5, 13, 0.82);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 16px 15px 12px;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── Quote text wrapper (reserves height so widget doesn't jump) ── */
+.quote-text-wrapper {
+  min-height: 58px;
+  display: flex;
+  align-items: center;
+}
+
+/* ── Quote text ── */
+.quote-text {
+  font-family: var(--font-main);
+  font-size: clamp(0.76rem, 1.4vw, 0.88rem);
+  color: var(--color-text);
+  line-height: 1.58;
+  font-style: italic;
+  opacity: 1;
+  /* Fade transition driven by JS toggling .fade-out class */
+  transition: opacity var(--transition-slow);
+}
+
+.quote-text.fade-out {
+  opacity: 0;
+}
+
+/* ── Next-quote arrow button ── */
+.btn-next-quote {
+  align-self: flex-end;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-primary-light);
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background var(--transition-fast),
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.btn-next-quote:hover {
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateX(3px);
+  box-shadow: var(--shadow-glow);
+}
+
+/* ── Mobile: expand to full width just above player ── */
+@media (max-width: 480px) {
+  .quotes-widget {
+    width: calc(100vw - 32px);
+    right: 16px;
+    bottom: 130px;
+  }
+}

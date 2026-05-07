@@ -1,0 +1,153 @@
+/* ═══════════════════════════════════════════════════
+   counter.css — Relationship duration countdown display
+════════════════════════════════════════════════════ */
+
+/* ── Section wrapper ── */
+.section-counter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 72vh;
+  padding: 64px 16px 40px;
+  text-align: center;
+  gap: 36px;
+}
+
+/* ── Header ── */
+.counter-header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.app-title {
+  font-family: var(--font-main);
+  font-size: clamp(2rem, 7vw, 4.2rem);
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: 0.02em;
+  text-shadow: 0 2px 24px rgba(233, 30, 140, 0.45);
+}
+
+.app-subtitle {
+  font-size: clamp(0.85rem, 2vw, 1.05rem);
+  color: var(--color-text-muted);
+  font-style: italic;
+  letter-spacing: 0.07em;
+}
+
+/* ── Digit display row ── */
+.counter-display {
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 2.5vw, 28px);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* ── Individual unit card ── */
+.counter-unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: clamp(72px, 16vw, 116px);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: clamp(14px, 2.5vw, 26px) clamp(12px, 2vw, 22px);
+  backdrop-filter: blur(14px);
+  box-shadow: var(--shadow-soft);
+  transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base);
+}
+
+.counter-unit:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-glow);
+  border-color: rgba(233, 30, 140, 0.35);
+}
+
+/* ── Numeric value ── */
+.counter-value {
+  font-family: var(--font-main);
+  font-size: clamp(2rem, 6vw, 3.6rem);
+  font-weight: 700;
+  color: var(--color-primary-light);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  transition: transform var(--transition-fast);
+  will-change: transform;
+}
+
+/* Brief scale-up on each tick (applied via JS) */
+.counter-value.tick {
+  transform: scale(1.14);
+}
+
+/* ── Unit label ── */
+.counter-label {
+  font-size: clamp(0.6rem, 1.4vw, 0.78rem);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  margin-top: 7px;
+}
+
+/* ── Blinking colon separator ── */
+.counter-separator {
+  font-size: clamp(1.6rem, 4.5vw, 2.8rem);
+  font-weight: 700;
+  color: var(--color-primary-light);
+  padding-bottom: 26px;
+  user-select: none;
+  animation: blink-colon 1s ease-in-out infinite;
+}
+
+@keyframes blink-colon {
+  0%, 100% { opacity: 0.55; }
+  50%       { opacity: 0.12; }
+}
+
+/* ── Date picker ── */
+.counter-date-picker {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.date-picker-label {
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
+  letter-spacing: 0.06em;
+}
+
+.date-input {
+  padding: 9px 18px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  color: var(--color-text);
+  font-size: 0.88rem;
+  outline: none;
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  color-scheme: dark;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.date-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(233, 30, 140, 0.22);
+}
+
+/* ── Mobile: hide colons to save space ── */
+@media (max-width: 420px) {
+  .counter-separator {
+    display: none;
+  }
+  .counter-display {
+    gap: 10px;
+  }
+}

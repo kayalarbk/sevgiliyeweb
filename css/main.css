@@ -1,0 +1,199 @@
+/* ═══════════════════════════════════════════════════
+   main.css — Global tokens, reset, layout, typography
+   All other CSS files consume variables defined here.
+════════════════════════════════════════════════════ */
+
+/* ── CSS Custom Properties (Design Tokens) ── */
+:root {
+  /* Brand colours */
+  --color-primary:        #e91e8c;
+  --color-primary-light:  #f48fb1;
+  --color-accent:         #c2185b;
+  --color-accent-soft:    #f8bbd9;
+
+  /* Background / surface */
+  --color-bg:             #1a0a14;
+  --color-surface:        rgba(255, 255, 255, 0.07);
+  --color-surface-solid:  #2d1a26;
+  --color-overlay:        rgba(20, 6, 16, 0.68);
+
+  /* Text */
+  --color-text:           #fff5f9;
+  --color-text-muted:     rgba(255, 245, 249, 0.55);
+
+  /* Borders */
+  --color-border:         rgba(255, 255, 255, 0.11);
+
+  /* Typography */
+  --font-main:  'Georgia', 'Times New Roman', serif;
+  --font-ui:    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Radius scale */
+  --radius-sm:   8px;
+  --radius-md:   16px;
+  --radius-lg:   24px;
+  --radius-pill: 999px;
+
+  /* Elevation */
+  --shadow-soft: 0 4px 28px rgba(0, 0, 0, 0.35);
+  --shadow-glow: 0 0 28px rgba(233, 30, 140, 0.28);
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-base: 300ms ease;
+  --transition-slow: 600ms ease;
+
+  /* Z-index layers */
+  --z-bg:       0;
+  --z-content:  1;
+  --z-player:   100;
+  --z-quotes:   110;
+  --z-modal:    200;
+  --z-lightbox: 210;
+}
+
+/* ── Reset ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-ui);
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  background-size: cover;
+  background-position: center center;
+  background-attachment: fixed;
+  min-height: 100vh;
+  overflow-x: hidden;
+  /* reserve space for fixed player bar (progress row + controls row) */
+  padding-bottom: 108px;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: inherit;
+  color: inherit;
+}
+
+input, button, label {
+  font-family: inherit;
+}
+
+h1, h2, h3 {
+  line-height: 1.2;
+}
+
+/* ── Background overlay ── */
+.bg-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--color-overlay);
+  z-index: var(--z-bg);
+  pointer-events: none;
+}
+
+/* ── Background upload control ── */
+.bg-upload-control {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: calc(var(--z-content) + 10);
+}
+
+.bg-upload-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  backdrop-filter: blur(10px);
+  font-size: 1.15rem;
+  cursor: pointer;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+}
+
+.bg-upload-label:hover {
+  background: rgba(255, 255, 255, 0.14);
+  transform: scale(1.1);
+}
+
+/* ── Utility: visually hide file inputs ── */
+.hidden-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* ── Main content wrapper ── */
+.app-wrapper {
+  position: relative;
+  z-index: var(--z-content);
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* ── Shared section title ── */
+.section-title {
+  font-family: var(--font-main);
+  font-size: clamp(1.15rem, 3vw, 1.6rem);
+  color: var(--color-primary-light);
+  letter-spacing: 0.04em;
+}
+
+/* ── Floating hearts ── */
+.floating-heart {
+  position: fixed;
+  pointer-events: none;
+  user-select: none;
+  z-index: calc(var(--z-content) + 5);
+  color: var(--color-primary);
+  opacity: 0;
+  will-change: transform, opacity;
+  animation: heart-float var(--fh-dur, 5s) ease-in forwards;
+  /* --fh-dur, --fh-rot-end, --fh-scale-end set per-element by JS */
+}
+
+@keyframes heart-float {
+  0%   {
+    transform: translateY(0) scale(1) rotate(0deg);
+    opacity: 0.85;
+  }
+  70%  { opacity: 0.4; }
+  100% {
+    transform: translateY(-65vh) scale(var(--fh-scale-end, 0.4)) rotate(var(--fh-rot-end, 15deg));
+    opacity: 0;
+  }
+}
+
+/* ── Responsive baseline ── */
+@media (max-width: 600px) {
+  body {
+    font-size: 14px;
+  }
+  .app-wrapper {
+    padding: 0 12px;
+  }
+}

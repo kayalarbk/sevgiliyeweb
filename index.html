@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Our Love Story</title>
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/counter.css" />
+  <link rel="stylesheet" href="css/player.css" />
+  <link rel="stylesheet" href="css/memories.css" />
+  <link rel="stylesheet" href="css/quotes.css" />
+</head>
+<body>
+
+  <!-- Full-screen background overlay -->
+  <div class="bg-overlay" id="bgOverlay"></div>
+
+  <!-- Background image changer (top-right corner) -->
+  <div class="bg-upload-control">
+    <label for="bgUpload" class="bg-upload-label" title="Change background photo">&#128444;</label>
+    <input type="file" id="bgUpload" accept="image/*" class="hidden-input" />
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       MAIN CONTENT
+  ════════════════════════════════════════ -->
+  <main class="app-wrapper">
+
+    <!-- ── COUNTER SECTION ── -->
+    <section class="section-counter" id="counterSection">
+      <header class="counter-header">
+        <h1 class="app-title">Our Love Story</h1>
+        <p class="app-subtitle">Every second with you is precious</p>
+      </header>
+
+      <div class="counter-display" id="counterDisplay">
+        <div class="counter-unit">
+          <span class="counter-value" id="valueDays">0</span>
+          <span class="counter-label">Days</span>
+        </div>
+        <span class="counter-separator" aria-hidden="true">:</span>
+        <div class="counter-unit">
+          <span class="counter-value" id="valueHours">00</span>
+          <span class="counter-label">Hours</span>
+        </div>
+        <span class="counter-separator" aria-hidden="true">:</span>
+        <div class="counter-unit">
+          <span class="counter-value" id="valueMinutes">00</span>
+          <span class="counter-label">Minutes</span>
+        </div>
+        <span class="counter-separator" aria-hidden="true">:</span>
+        <div class="counter-unit">
+          <span class="counter-value" id="valueSeconds">00</span>
+          <span class="counter-label">Seconds</span>
+        </div>
+      </div>
+
+      <div class="counter-date-picker">
+        <label for="startDate" class="date-picker-label">Our beginning:</label>
+        <input type="datetime-local" id="startDate" class="date-input" />
+      </div>
+    </section>
+
+    <!-- ── MEMORIES SECTION ── -->
+    <section class="section-memories" id="memoriesSection">
+      <div class="memories-header">
+        <h2 class="section-title">Our Memories</h2>
+        <button class="btn-add-memory" id="btnAddMemory" type="button">+ Add Memory</button>
+      </div>
+      <div class="memories-scroll-container">
+        <div class="memories-track" id="memoriesTrack">
+          <!-- Memory cards injected by memories.js -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ═══════════════════════════════════════
+       ADD MEMORY MODAL
+  ════════════════════════════════════════ -->
+  <div class="modal-overlay" id="addMemoryModal" role="dialog" aria-modal="true" aria-label="Add a memory">
+    <div class="modal-box">
+      <button class="modal-close" id="closeAddMemory" type="button" aria-label="Close modal">&#10005;</button>
+      <h3 class="modal-title">Add a Memory</h3>
+      <form class="memory-form" id="memoryForm" novalidate>
+        <div class="form-field">
+          <label for="memoryPhoto">Photo</label>
+          <input type="file" id="memoryPhoto" accept="image/*" />
+        </div>
+        <div class="form-field">
+          <label for="memoryTitle">Title</label>
+          <input type="text" id="memoryTitle" placeholder="Our first date&#8230;" autocomplete="off" required />
+        </div>
+        <div class="form-field">
+          <label for="memoryDate">Date</label>
+          <input type="date" id="memoryDate" />
+        </div>
+        <button type="submit" class="btn-save-memory">Save Memory</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       LIGHTBOX MODAL
+  ════════════════════════════════════════ -->
+  <div class="lightbox-overlay" id="lightboxOverlay" role="dialog" aria-modal="true" aria-label="Memory detail">
+    <button class="lightbox-close" id="lightboxClose" type="button" aria-label="Close lightbox">&#10005;</button>
+    <div class="lightbox-content" id="lightboxContent">
+      <img class="lightbox-img" id="lightboxImg" src="" alt="" />
+      <div class="lightbox-info">
+        <h3 class="lightbox-title" id="lightboxTitle"></h3>
+        <p class="lightbox-date"  id="lightboxDate"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       QUOTES WIDGET (fixed bottom-right)
+  ════════════════════════════════════════ -->
+  <aside class="quotes-widget" id="quotesWidget" aria-label="Romantic quote of the hour">
+    <div class="quote-text-wrapper">
+      <p class="quote-text" id="quoteText"></p>
+    </div>
+    <button class="btn-next-quote" id="btnNextQuote" type="button" aria-label="Next quote">&#8594;</button>
+  </aside>
+
+  <!-- ═══════════════════════════════════════
+       MUSIC PLAYER (fixed bottom bar)
+  ════════════════════════════════════════ -->
+  <footer class="player-bar" id="playerBar" role="region" aria-label="Music player">
+
+    <!-- Seek / progress bar row -->
+    <div class="player-progress-row">
+      <span class="player-time" id="playerCurrentTime">0:00</span>
+      <input type="range" class="player-progress" id="playerProgress"
+             min="0" max="100" value="0" step="0.1" aria-label="Seek" />
+      <span class="player-time" id="playerDuration">0:00</span>
+    </div>
+
+    <!-- Track info + controls + upload row -->
+    <div class="player-main-row">
+      <div class="player-info">
+        <span class="player-track-name" id="trackName">No track loaded</span>
+      </div>
+      <div class="player-controls">
+        <button class="player-btn" id="btnPrev"      type="button" aria-label="Previous track">&#9198;</button>
+        <button class="player-btn player-btn-main" id="btnPlayPause" type="button" aria-label="Play">&#9654;</button>
+        <button class="player-btn" id="btnNext"      type="button" aria-label="Next track">&#9197;</button>
+      </div>
+      <div class="player-upload">
+        <label for="audioUpload" class="player-upload-label" title="Upload music files">&#9835; Add Music</label>
+        <input type="file" id="audioUpload" accept="audio/*" multiple class="hidden-input" />
+      </div>
+    </div>
+
+    <audio id="audioElement" preload="metadata"></audio>
+  </footer>
+
+  <!-- JS modules (order matters: modules before app.js) -->
+  <script src="js/counter.js"></script>
+  <script src="js/player.js"></script>
+  <script src="js/memories.js"></script>
+  <script src="js/quotes.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>
