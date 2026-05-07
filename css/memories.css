@@ -92,6 +92,12 @@
   outline: none;
 }
 
+/* ── Image wrapper (for action overlay) ── */
+.memory-card-img-wrap {
+  position: relative;
+  overflow: hidden;
+}
+
 .memory-card-photo {
   width: 100%;
   aspect-ratio: 4 / 3;
@@ -109,6 +115,56 @@
   justify-content: center;
   font-size: 2.2rem;
   color: var(--color-text-muted);
+}
+
+/* ── Photo count badge ── */
+.memory-photo-count {
+  position: absolute;
+  bottom: 7px;
+  left: 8px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 0.68rem;
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
+  pointer-events: none;
+}
+
+/* ── Edit / delete action buttons ── */
+.memory-card-actions {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  gap: 4px;
+  padding: 6px;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.memory-card:hover .memory-card-actions,
+.memory-card:focus-within .memory-card-actions {
+  opacity: 1;
+}
+
+.memory-action-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-pill);
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+  cursor: pointer;
+  border: none;
+}
+
+.memory-action-btn:hover {
+  background: rgba(0, 0, 0, 0.8);
+  transform: scale(1.12);
 }
 
 .memory-card-body {
@@ -316,6 +372,32 @@
   transform: scale(1.1);
 }
 
+/* ── Lightbox prev / next ── */
+.lightbox-nav {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 46px;
+  height: 46px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+}
+
+.lightbox-nav:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.lightbox-prev { left:  14px; }
+.lightbox-next { right: 14px; }
+
 .lightbox-content {
   display: flex;
   flex-direction: column;
@@ -348,4 +430,11 @@
   font-size: 0.83rem;
   color: var(--color-text-muted);
   letter-spacing: 0.04em;
+}
+
+.lightbox-counter {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  margin-top: 4px;
+  letter-spacing: 0.06em;
 }
