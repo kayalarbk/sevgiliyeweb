@@ -111,7 +111,16 @@ const quotes = (function () {
     // Show initial quote instantly, without transition
     const el = document.getElementById('quoteText');
     if (el) {
-      el.textContent = '“' + QUOTES[currentIdx] + '”';
+      el.textContent = '”' + QUOTES[currentIdx] + '”';
+    }
+
+    // Toggle widget visibility
+    const toggleBtn = document.getElementById('btnToggleQuotes');
+    const widget    = document.getElementById('quotesWidget');
+    if (toggleBtn && widget) {
+      toggleBtn.addEventListener('click', () => {
+        widget.classList.toggle('quotes-hidden');
+      });
     }
 
     scheduleHourlyChange();
