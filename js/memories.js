@@ -1,6 +1,8 @@
 /**
- * memories.js — Yatay kayan anı kartları, anı ekleme/düzenleme modali,
- *               lightbox ve harita konum entegrasyonu.
+ * memories.js — Anı kartları, modal, lightbox, mini-harita.
+ *
+ * escapeHtml, escapeAttr, formatDate, storage, setButtonLoading
+ * → utils.js'deki global yardımcılar.
  */
 const memories = (function () {
 
@@ -8,59 +10,36 @@ const memories = (function () {
   let cards      = [];
   let editingId  = null;
 
-  /* Lightbox state */
+  /* Lightbox durumu */
   let lbPhotos = [];
   let lbIndex  = 0;
 
-  /* Mini-map state (location in memory modal) */
-  let miniMap           = null;
-  let miniMapMarker     = null;
+  /* Mini-harita durumu (anı modalındaki konum seçimi) */
+  let miniMap               = null;
+  let miniMapMarker         = null;
   let pendingLocationCoords = null;
 
   /* ── Persistence ─────────────────────────────────── */
 
   function loadCards() {
-    try {
-      const raw    = localStorage.getItem(STORAGE_KEY);
-      const parsed = raw ? JSON.parse(raw) : [];
-      cards = parsed.map(c => ({
-        id:         c.id,
-        title:      c.title,
-        date:       c.date,
-        photos:     c.photos || (c.photo ? [c.photo] : []),
-        locationId: c.locationId || null,
-      }));
-    } catch (_) {
-      cards = [];
-    }
+    const parsed = storage.get(STORAGE_KEY, []);
+    /* Eski tek-fotoğraf formatını ({ photo }) → çoklu formata ({ photos }) taşı */
+    cards = parsed.map(c => ({
+      id:         c.id,
+      title:      c.title,
+      date:       c.date,
+      photos:     c.photos || (c.photo ? [c.photo] : []),
+      locationId: c.locationId || null,
+    }));
   }
 
   function saveCards() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(cards));
-    } catch (_) {
+    if (!storage.set(STORAGE_KEY, cards)) {
       alert('Depolama alanı dolmak üzere. Bazı anıları silmeyi dene.');
     }
   }
 
-  /* ── Helpers ─────────────────────────────────────── */
-
-  function formatDate(dateStr) {
-    if (!dateStr) return '';
-    const d = new Date(dateStr + 'T00:00:00');
-    if (isNaN(d.getTime())) return dateStr;
-    return d.toLocaleDateString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric' });
-  }
-
-  function escapeHtml(str) {
-    return String(str)
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  }
-
-  function escapeAttr(str) {
-    return String(str).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-  }
+  /* ── Dosya okuma ─────────────────────────────────── */
 
   function readFiles(files) {
     return Promise.all(
@@ -73,7 +52,7 @@ const memories = (function () {
     ).then(results => results.filter(Boolean));
   }
 
-  /* ── Card element ────────────────────────────────── */
+  /* ── Kart elementi ───────────────────────────────── */
 
   function createCardEl(card) {
     const el = document.createElement('article');
@@ -84,7 +63,8 @@ const memories = (function () {
 
     const firstPhoto = card.photos.length ? card.photos[0] : '';
     const photoHtml  = firstPhoto
-      ? `<img class="memory-card-photo" src="${firstPhoto}" alt="${escapeAttr(card.title)}" loading="lazy" />`
+      ? `<img class="memory-card-photo" src="${firstPhoto}"
+               alt="${escapeAttr(card.title)}" loading="lazy" />`
       : `<div class="memory-card-photo-placeholder" aria-hidden="true">📷</div>`;
 
     const countBadge = card.photos.length > 1
@@ -136,6 +116,7 @@ const memories = (function () {
     const track = document.getElementById('memoriesTrack');
     if (!track) return;
     track.innerHTML = '';
+
     if (!cards.length) {
       const empty = document.createElement('p');
       empty.className   = 'memories-empty';
@@ -143,6 +124,7 @@ const memories = (function () {
       track.appendChild(empty);
       return;
     }
+
     const frag = document.createDocumentFragment();
     cards.forEach(c => frag.appendChild(createCardEl(c)));
     track.appendChild(frag);
@@ -158,6 +140,7 @@ const memories = (function () {
     renderCards();
   }
 
+  /* bucket.js tarafından onaysız silme için kullanılır */
   function deleteById(id) {
     removeLinkedLocation(id);
     cards = cards.filter(c => c.id !== id);
@@ -165,6 +148,7 @@ const memories = (function () {
     renderCards();
   }
 
+  /* map.js'deki bağlı konumu da sil */
   function removeLinkedLocation(cardId) {
     const card = cards.find(c => c.id === cardId);
     if (card && card.locationId && typeof mapModule !== 'undefined') {
@@ -182,7 +166,6 @@ const memories = (function () {
     document.getElementById('lightboxDate').textContent  = formatDate(card.date);
 
     updateLightboxPhoto();
-
     document.getElementById('lightboxOverlay').classList.add('open');
     document.body.style.overflow = 'hidden';
     document.getElementById('lightboxClose').focus();
@@ -203,9 +186,9 @@ const memories = (function () {
     }
 
     const multi = lbPhotos.length > 1;
-    prevBtn.style.display  = multi ? '' : 'none';
-    nextBtn.style.display  = multi ? '' : 'none';
-    counter.style.display  = multi ? '' : 'none';
+    prevBtn.style.display = multi ? '' : 'none';
+    nextBtn.style.display = multi ? '' : 'none';
+    counter.style.display = multi ? '' : 'none';
     if (multi) counter.textContent = `${lbIndex + 1} / ${lbPhotos.length}`;
   }
 
@@ -226,18 +209,22 @@ const memories = (function () {
     document.body.style.overflow = '';
   }
 
-  /* ── Mini-map (location in memory modal) ─────────── */
+  /* ── Mini-harita (anı modalındaki konum) ─────────── */
 
+  /* Harita sadece ilk kullanımda başlatılır (lazy init) */
   function initMiniMap() {
     if (typeof L === 'undefined') return;
+
+    const container = document.getElementById('memoryMiniMap');
+    if (!container) return;
+
     if (miniMap) {
+      /* Zaten var — görünür hale geldikten sonra boyutu düzelt */
       setTimeout(() => miniMap.invalidateSize(), 80);
       return;
     }
-    miniMap = L.map('memoryMiniMap', {
-      center: [39.9334, 32.8597],
-      zoom: 5
-    });
+
+    miniMap = L.map('memoryMiniMap', { center: [39.9334, 32.8597], zoom: 5 });
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap'
     }).addTo(miniMap);
@@ -260,6 +247,22 @@ const memories = (function () {
     pendingLocationCoords = null;
   }
 
+  /* ── Modal yardımcıları ──────────────────────────── */
+
+  function hideLocationFields() {
+    const fields = document.getElementById('locationExtraFields');
+    if (fields) fields.classList.remove('visible');
+    const cb = document.getElementById('memoryAddLocation');
+    if (cb) cb.checked = false;
+  }
+
+  function resetModal() {
+    document.getElementById('memoryForm').reset();
+    hideLocationFields();
+    resetMiniMap();
+    document.body.style.overflow = '';
+  }
+
   /* ── Add / Edit modal ────────────────────────────── */
 
   let pendingPhoto    = null;
@@ -270,20 +273,19 @@ const memories = (function () {
     pendingPhoto    = null;
     onSavedCallback = null;
     document.getElementById('modalTitle').textContent = 'Anı Ekle';
-    document.getElementById('memoryForm').reset();
-    hideLocationFields();
+    resetModal();
     document.getElementById('addMemoryModal').classList.add('open');
     document.body.style.overflow = 'hidden';
     document.getElementById('memoryTitle').focus();
   }
 
+  /* bucket.js başlık ön-doldurarak çağırır */
   function openWithData(title, onSaved) {
     editingId       = null;
     pendingPhoto    = null;
     onSavedCallback = onSaved || null;
     document.getElementById('modalTitle').textContent = 'Anı Ekle';
-    document.getElementById('memoryForm').reset();
-    hideLocationFields();
+    resetModal();
     document.getElementById('memoryTitle').value = title || '';
     document.getElementById('addMemoryModal').classList.add('open');
     document.body.style.overflow = 'hidden';
@@ -304,85 +306,103 @@ const memories = (function () {
 
   function closeAddModal() {
     document.getElementById('addMemoryModal').classList.remove('open');
-    document.getElementById('memoryForm').reset();
-    hideLocationFields();
-    resetMiniMap();
-    document.body.style.overflow = '';
+    resetModal();
     editingId       = null;
     pendingPhoto    = null;
     onSavedCallback = null;
   }
 
-  function hideLocationFields() {
-    const fields = document.getElementById('locationExtraFields');
-    if (fields) fields.classList.remove('visible');
-    const cb = document.getElementById('memoryAddLocation');
-    if (cb) cb.checked = false;
+  /* ── Form gönderimi ──────────────────────────────── */
+
+  /* Yeni anı kaydını tamamlar; gerekirse harita konumunu ekler */
+  function persistNewCard(title, dateVal, newPhotos, addLoc, locName, locCoords) {
+    const newId   = Date.now();
+    const newCard = { id: newId, title, date: dateVal, photos: newPhotos, locationId: null };
+    cards.unshift(newCard);
+    saveCards();
+    renderCards();
+
+    if (addLoc && locCoords && typeof mapModule !== 'undefined') {
+      try {
+        const locId = mapModule.addLocation({
+          id:       Date.now() + 1,
+          name:     locName || title,
+          lat:      locCoords.lat,
+          lng:      locCoords.lng,
+          date:     dateVal,
+          note:     '',
+          memoryId: newId
+        });
+        cards = cards.map(c => c.id === newId ? { ...c, locationId: locId } : c);
+        saveCards();
+      } catch (_) {}
+    }
+
+    return newId;
+  }
+
+  /* Düzenleme kaydını tamamlar */
+  function persistEditCard(title, dateVal, newPhotos) {
+    cards = cards.map(c => {
+      if (c.id !== editingId) return c;
+      return {
+        ...c,
+        title,
+        date:   dateVal,
+        photos: newPhotos.length ? [...c.photos, ...newPhotos] : c.photos,
+      };
+    });
+    saveCards();
+    renderCards();
   }
 
   function handleFormSubmit(e) {
     e.preventDefault();
 
-    const title       = document.getElementById('memoryTitle').value.trim();
-    const dateVal     = document.getElementById('memoryDate').value;
-    const fileInput   = document.getElementById('memoryPhoto');
-    const addLoc      = document.getElementById('memoryAddLocation').checked;
-    const locName     = document.getElementById('memoryLocationName').value.trim();
-    const locCoords   = pendingLocationCoords ? { ...pendingLocationCoords } : null;
+    const title     = document.getElementById('memoryTitle').value.trim();
+    const dateVal   = document.getElementById('memoryDate').value;
+    const fileInput = document.getElementById('memoryPhoto');
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+
+    /* Form değerlerini async başlamadan önce yakala */
+    const addLoc    = document.getElementById('memoryAddLocation').checked;
+    const locName   = document.getElementById('memoryLocationName').value.trim();
+    const locCoords = pendingLocationCoords ? { ...pendingLocationCoords } : null;
 
     if (!title) { document.getElementById('memoryTitle').focus(); return; }
 
-    const persist = (newPhotos) => {
+    const done = (newPhotos) => {
       if (editingId !== null) {
-        cards = cards.map(c => {
-          if (c.id !== editingId) return c;
-          return {
-            ...c,
-            title,
-            date:   dateVal,
-            photos: newPhotos.length ? [...c.photos, ...newPhotos] : c.photos,
-          };
-        });
-        saveCards();
-        renderCards();
+        persistEditCard(title, dateVal, newPhotos);
+        setButtonLoading(submitBtn, false);
         closeAddModal();
       } else {
-        const newId  = Date.now();
-        const newCard = { id: newId, title, date: dateVal, photos: newPhotos, locationId: null };
-        cards.unshift(newCard);
-        saveCards();
-        renderCards();
-
-        /* Add linked map location if requested */
-        if (addLoc && locCoords && typeof mapModule !== 'undefined') {
-          try {
-            const locId = mapModule.addLocation({
-              id:       Date.now() + 1,
-              name:     locName || title,
-              lat:      locCoords.lat,
-              lng:      locCoords.lng,
-              date:     dateVal,
-              note:     '',
-              memoryId: newId
-            });
-            cards = cards.map(c => c.id === newId ? { ...c, locationId: locId } : c);
-            saveCards();
-          } catch (_) {}
-        }
-
-        const cb = onSavedCallback;
+        const newId = persistNewCard(title, dateVal, newPhotos, addLoc, locName, locCoords);
+        const cb    = onSavedCallback;
+        setButtonLoading(submitBtn, false);
         closeAddModal();
         if (cb) cb(newId);
       }
     };
 
+    setButtonLoading(submitBtn, true);
+
     if (fileInput.files.length) {
-      readFiles(fileInput.files).then(persist);
+      readFiles(fileInput.files).then(done);
     } else if (pendingPhoto) {
-      persist([pendingPhoto]);
+      done([pendingPhoto]);
     } else {
-      persist([]);
+      done([]);
     }
+  }
+
+  /* ── Harita bağlantısı ───────────────────────────── */
+
+  /* map.js tarafından konum kaydedildiğinde çağrılır */
+  function linkLocation(memoryId, locationId) {
+    cards = cards.map(c => c.id === memoryId ? { ...c, locationId } : c);
+    saveCards();
+    renderCards();
   }
 
   /* ── Init ────────────────────────────────────────── */
@@ -400,7 +420,7 @@ const memories = (function () {
     document.getElementById('lightboxPrev').addEventListener('click', lbPrev);
     document.getElementById('lightboxNext').addEventListener('click', lbNext);
 
-    /* Location checkbox */
+    /* Konum checkbox */
     const locCheckbox = document.getElementById('memoryAddLocation');
     const locFields   = document.getElementById('locationExtraFields');
     if (locCheckbox && locFields) {
@@ -415,24 +435,17 @@ const memories = (function () {
       });
     }
 
-    /* Overlay / keyboard */
+    /* Overlay / klavye */
     const lbOverlay  = document.getElementById('lightboxOverlay');
     const addOverlay = document.getElementById('addMemoryModal');
     lbOverlay.addEventListener('click',  e => { if (e.target === lbOverlay)  closeLightbox();  });
     addOverlay.addEventListener('click', e => { if (e.target === addOverlay) closeAddModal(); });
 
     document.addEventListener('keydown', e => {
-      if (e.key === 'Escape')      { closeLightbox(); closeAddModal(); }
-      if (e.key === 'ArrowLeft')   lbPrev();
-      if (e.key === 'ArrowRight')  lbNext();
+      if (e.key === 'Escape')     { closeLightbox(); closeAddModal(); }
+      if (e.key === 'ArrowLeft')  lbPrev();
+      if (e.key === 'ArrowRight') lbNext();
     });
-  }
-
-  /* Called by map.js after memory is saved for a location */
-  function linkLocation(memoryId, locationId) {
-    cards = cards.map(c => c.id === memoryId ? { ...c, locationId } : c);
-    saveCards();
-    renderCards();
   }
 
   return { init, openWithData, deleteById, linkLocation };

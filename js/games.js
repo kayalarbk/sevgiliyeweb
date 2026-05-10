@@ -12,27 +12,33 @@
  */
 const gamesModule = (function () {
 
-  const PUZZLE_SETTINGS_KEY = 'love_puzzle_settings';
+  const PUZZLE_SETTINGS_KEY  = 'love_puzzle_settings';
+  const CONFETTI_COUNT       = 130;
+  const CONFETTI_MIN_SIZE    = 6;
+  const CONFETTI_SIZE_RANGE  = 9;
+  const CONFETTI_MIN_DUR     = 2.5;
+  const CONFETTI_DUR_RANGE   = 2.5;
+  const CONFETTI_MAX_DELAY   = 2.5;
+  const SOLVED_DELAY_MS      = 700;
+  const TITLE_CLICK_THRESHOLD = 5;
+  const TITLE_CLICK_TIMEOUT_MS = 2000;
 
   /* ── State ───────────────────────────────────────── */
 
-  let puzzleImageUrl   = '';
-  let puzzleGrid       = 3;
-  let puzzleSlots      = [];     // puzzleSlots[slotIndex] = pieceId
-  let dragSourceSlot   = null;
-  let selectedSlotEl   = null;
+  let puzzleImageUrl = '';
+  let puzzleGrid     = 3;
+  let puzzleSlots    = [];
+  let dragSourceSlot = null;
+  let selectedSlotEl = null;
 
   /* ── Puzzle settings ─────────────────────────────── */
 
   function loadSettings() {
-    try {
-      const raw = localStorage.getItem(PUZZLE_SETTINGS_KEY);
-      return raw ? JSON.parse(raw) : {};
-    } catch (_) { return {}; }
+    return storage.get(PUZZLE_SETTINGS_KEY, {});
   }
 
   function saveSettings(s) {
-    try { localStorage.setItem(PUZZLE_SETTINGS_KEY, JSON.stringify(s)); } catch (_) {}
+    storage.set(PUZZLE_SETTINGS_KEY, s);
   }
 
   /* ── Game menu / area toggle ─────────────────────── */
@@ -88,18 +94,22 @@ const gamesModule = (function () {
 
     document.getElementById('puzzleBack').addEventListener('click', showMenu);
     document.getElementById('puzzleStart').addEventListener('click', handleStart);
+    document.getElementById('puzzleReset').addEventListener('click', () => {
+      buildPuzzle(puzzleImageUrl, puzzleGrid);
+    });
 
-    /* Gizli ayarlar erişimi: başlığa hızlıca 5 kez tıkla */
+    /* Secret settings access: 5 clicks on the title within 2 seconds */
     let titleClicks = 0;
     let titleTimer  = null;
     document.getElementById('puzzleTitle').addEventListener('click', () => {
       titleClicks++;
       clearTimeout(titleTimer);
-      if (titleClicks >= 5) { titleClicks = 0; openSettings(); return; }
-      titleTimer = setTimeout(() => { titleClicks = 0; }, 2000);
-    });
-    document.getElementById('puzzleReset').addEventListener('click', () => {
-      buildPuzzle(puzzleImageUrl, puzzleGrid);
+      if (titleClicks >= TITLE_CLICK_THRESHOLD) {
+        titleClicks = 0;
+        openSettings();
+        return;
+      }
+      titleTimer = setTimeout(() => { titleClicks = 0; }, TITLE_CLICK_TIMEOUT_MS);
     });
 
     document.getElementById('puzzleImageFile').addEventListener('change', function (e) {
@@ -120,29 +130,31 @@ const gamesModule = (function () {
       return;
     }
     const checked = document.querySelector('input[name="puzzleGrid"]:checked');
-    puzzleGrid = checked ? parseInt(checked.value, 10) : 3;
+    puzzleGrid     = checked ? parseInt(checked.value, 10) : 3;
     puzzleImageUrl = url;
-    buildPuzzle(url, puzzleGrid);
+
+    const startBtn = document.getElementById('puzzleStart');
+    setButtonLoading(startBtn, true);
+    buildPuzzle(url, puzzleGrid, startBtn);
   }
 
   /* ── Puzzle builder ──────────────────────────────── */
 
-  function buildPuzzle(imageUrl, grid) {
-    const setup   = document.getElementById('puzzleSetup');
-    const game    = document.getElementById('puzzleGame');
-    const gridEl  = document.getElementById('puzzleGrid');
+  function buildPuzzle(imageUrl, grid, startBtn) {
+    const setup  = document.getElementById('puzzleSetup');
+    const game   = document.getElementById('puzzleGame');
+    const gridEl = document.getElementById('puzzleGrid');
 
-    gridEl.innerHTML = '<p class="puzzle-loading">Yükleniyor…</p>';
+    gridEl.innerHTML    = '<p class="puzzle-loading">Yükleniyor…</p>';
     game.style.display  = '';
     setup.style.display = 'none';
-
-    selectedSlotEl = null;
+    selectedSlotEl      = null;
 
     const img = new Image();
     img.onload = function () {
+      if (startBtn) setButtonLoading(startBtn, false);
       gridEl.innerHTML = '';
-      gridEl.style.aspectRatio =
-        `${img.naturalWidth} / ${img.naturalHeight}`;
+      gridEl.style.aspectRatio        = `${img.naturalWidth} / ${img.naturalHeight}`;
       gridEl.style.gridTemplateColumns = `repeat(${grid}, 1fr)`;
       gridEl.style.gridTemplateRows    = `repeat(${grid}, 1fr)`;
 
@@ -152,44 +164,38 @@ const gamesModule = (function () {
 
       const frag = document.createDocumentFragment();
       for (let slot = 0; slot < total; slot++) {
-        const pieceId = puzzleSlots[slot];
-        const slotEl  = document.createElement('div');
+        const slotEl = document.createElement('div');
         slotEl.className      = 'puzzle-slot';
         slotEl.dataset.slotId = slot;
-
-        const pieceEl = makePiece(pieceId, grid, imageUrl);
-        slotEl.appendChild(pieceEl);
+        slotEl.appendChild(makePiece(puzzleSlots[slot], grid, imageUrl));
         frag.appendChild(slotEl);
       }
       gridEl.appendChild(frag);
-
       setupInteraction();
     };
 
     img.onerror = function () {
+      if (startBtn) setButtonLoading(startBtn, false);
       game.style.display  = 'none';
       setup.style.display = '';
-      alert(
-        'Fotoğraf yüklenemedi. Lütfen geçerli bir URL girin veya farklı bir dosya seçin.'
-      );
+      alert('Fotoğraf yüklenemedi. Lütfen geçerli bir URL girin veya farklı bir dosya seçin.');
     };
 
     img.src = imageUrl;
   }
 
-  /* Creates a puzzle piece div using CSS background */
   function makePiece(pieceId, grid, imageUrl) {
-    const col = pieceId % grid;
-    const row = Math.floor(pieceId / grid);
+    const col  = pieceId % grid;
+    const row  = Math.floor(pieceId / grid);
     const pctX = grid === 1 ? 0 : (col * 100) / (grid - 1);
     const pctY = grid === 1 ? 0 : (row * 100) / (grid - 1);
 
     const div = document.createElement('div');
-    div.className        = 'puzzle-piece';
-    div.dataset.pieceId  = pieceId;
-    div.draggable        = true;
-    div.style.backgroundImage    = `url("${imageUrl}")`;
-    div.style.backgroundSize     = `${grid * 100}% ${grid * 100}%`;
+    div.className               = 'puzzle-piece';
+    div.dataset.pieceId         = pieceId;
+    div.draggable               = true;
+    div.style.backgroundImage   = `url("${imageUrl}")`;
+    div.style.backgroundSize    = `${grid * 100}% ${grid * 100}%`;
     div.style.backgroundPosition = `${pctX}% ${pctY}%`;
     return div;
   }
@@ -210,7 +216,6 @@ const gamesModule = (function () {
     const slots  = document.querySelectorAll('#puzzleGrid .puzzle-slot');
     const pieces = document.querySelectorAll('#puzzleGrid .puzzle-piece');
 
-    /* Drag-and-drop */
     pieces.forEach(piece => {
       piece.addEventListener('dragstart', e => {
         dragSourceSlot = piece.parentElement;
@@ -240,7 +245,6 @@ const gamesModule = (function () {
         dragSourceSlot = null;
       });
 
-      /* Click-to-swap (works on mobile too) */
       slot.addEventListener('click', () => {
         if (selectedSlotEl === null) {
           selectedSlotEl = slot;
@@ -257,7 +261,6 @@ const gamesModule = (function () {
     });
   }
 
-  /* Swaps pieces between two slot elements and updates state */
   function swapSlots(slotA, slotB) {
     const pieceA = slotA.querySelector('.puzzle-piece');
     const pieceB = slotB.querySelector('.puzzle-piece');
@@ -295,42 +298,43 @@ const gamesModule = (function () {
   function onSolved() {
     spawnConfetti();
     setTimeout(() => {
-      const s = loadSettings();
-      const noteEl  = document.getElementById('puzzleCompleteNote');
-      const vWrap   = document.getElementById('puzzleVideoWrap');
-      const vFrame  = document.getElementById('puzzleVideoFrame');
+      const s      = loadSettings();
+      const noteEl = document.getElementById('puzzleCompleteNote');
+      const vWrap  = document.getElementById('puzzleVideoWrap');
+      const vFrame = document.getElementById('puzzleVideoFrame');
 
       noteEl.textContent = s.note || '🎉 Puzzle\'ı tamamladın! Tebrikler!';
 
       if (s.videoUrl) {
-        vFrame.src           = s.videoUrl;
-        vWrap.style.display  = '';
+        vFrame.src          = s.videoUrl;
+        vWrap.style.display = '';
       } else {
-        vFrame.src           = '';
-        vWrap.style.display  = 'none';
+        vFrame.src          = '';
+        vWrap.style.display = 'none';
       }
 
       document.getElementById('puzzleCompleteModal').classList.add('open');
       document.body.style.overflow = 'hidden';
-    }, 700);
+    }, SOLVED_DELAY_MS);
   }
 
   /* ── Confetti ────────────────────────────────────── */
 
+  const CONFETTI_COLORS = [
+    '#e91e8c', '#ff5722', '#ffeb3b', '#4caf50',
+    '#2196f3', '#9c27b0', '#ff4081', '#00bcd4', '#ff9800'
+  ];
+
   function spawnConfetti() {
-    const colors = [
-      '#e91e8c', '#ff5722', '#ffeb3b', '#4caf50',
-      '#2196f3', '#9c27b0', '#ff4081', '#00bcd4', '#ff9800'
-    ];
-    for (let i = 0; i < 130; i++) {
-      const p = document.createElement('div');
+    for (let i = 0; i < CONFETTI_COUNT; i++) {
+      const p    = document.createElement('div');
+      const size = CONFETTI_MIN_SIZE + Math.random() * CONFETTI_SIZE_RANGE;
       p.className = 'confetti-particle';
-      const size = 6 + Math.random() * 9;
       p.style.cssText = `
         left:${Math.random() * 100}vw;
-        background-color:${colors[Math.floor(Math.random() * colors.length)]};
-        animation-delay:${Math.random() * 2.5}s;
-        animation-duration:${2.5 + Math.random() * 2.5}s;
+        background-color:${CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)]};
+        animation-delay:${Math.random() * CONFETTI_MAX_DELAY}s;
+        animation-duration:${CONFETTI_MIN_DUR + Math.random() * CONFETTI_DUR_RANGE}s;
         width:${size}px;
         height:${size}px;
         border-radius:${Math.random() > 0.45 ? '50%' : '3px'};
@@ -371,7 +375,6 @@ const gamesModule = (function () {
       btn.addEventListener('click', () => showGameArea(btn.dataset.game));
     });
 
-    /* Settings modal */
     document.getElementById('closePuzzleSettings').addEventListener('click', closeSettings);
     document.getElementById('puzzleSettingsForm').addEventListener('submit', e => {
       e.preventDefault();
@@ -382,16 +385,13 @@ const gamesModule = (function () {
       closeSettings();
     });
 
-    /* Complete modal */
     document.getElementById('closePuzzleComplete').addEventListener('click', closePuzzleComplete);
 
-    /* Overlay clicks */
     const sOverlay = document.getElementById('puzzleSettingsModal');
     sOverlay.addEventListener('click', e => { if (e.target === sOverlay) closeSettings(); });
     const cOverlay = document.getElementById('puzzleCompleteModal');
     cOverlay.addEventListener('click', e => { if (e.target === cOverlay) closePuzzleComplete(); });
 
-    /* Escape key */
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape') {
         closeSettings();

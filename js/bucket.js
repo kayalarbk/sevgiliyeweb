@@ -1,37 +1,29 @@
+/**
+ * bucket.js — "Birlikte Yapacaklarımız" listesi.
+ *
+ * escapeHtml, storage → utils.js'deki global yardımcılar.
+ */
 const bucket = (function () {
 
   const STORAGE_KEY = 'love_bucket';
-  let items          = [];
-  let editingId      = null;
-  let pendingDoneId  = null;  // item awaiting memory-confirm
-  let pendingUncheckId = null; // item awaiting uncheck-warning confirm
+  let items           = [];
+  let editingId       = null;
+  let pendingDoneId   = null;
+  let pendingUncheckId = null;
 
   /* ── Persistence ─────────────────────────────────── */
 
   function load() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      items = raw ? JSON.parse(raw) : [];
-    } catch (_) {
-      items = [];
-    }
+    items = storage.get(STORAGE_KEY, []);
   }
 
   function save() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-    } catch (_) {
+    if (!storage.set(STORAGE_KEY, items)) {
       alert('Depolama alanı dolmak üzere.');
     }
   }
 
-  /* ── Helpers ─────────────────────────────────────── */
-
-  function escapeHtml(str) {
-    return String(str)
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  }
+  /* ── Dosya okuma ─────────────────────────────────── */
 
   function readFile(file) {
     return new Promise(resolve => {
@@ -42,7 +34,7 @@ const bucket = (function () {
     });
   }
 
-  /* ── Card element ────────────────────────────────── */
+  /* ── Kart elementi ───────────────────────────────── */
 
   function createCardEl(item) {
     const el = document.createElement('article');
@@ -70,12 +62,10 @@ const bucket = (function () {
     el.querySelector('.bucket-checkbox').addEventListener('change', e => {
       toggleDone(item.id, e.target.checked);
     });
-
     el.querySelector('.btn-edit-bucket').addEventListener('click', e => {
       e.stopPropagation();
       openEditModal(item);
     });
-
     el.querySelector('.btn-delete-bucket').addEventListener('click', e => {
       e.stopPropagation();
       deleteItem(item.id);
@@ -110,9 +100,8 @@ const bucket = (function () {
     if (!isDone) {
       const item = items.find(it => it.id === id);
       if (item && item.linkedMemoryId) {
-        // Intercepted: show warning before actually unchecking
         pendingUncheckId = id;
-        render();  // restore checked state visually
+        render(); // işaretlenmiş görünümü koru
         openUncheckModal();
         return;
       }
@@ -165,12 +154,15 @@ const bucket = (function () {
     editingId = null;
   }
 
+  /* Form gönderildiğinde fotoğraf varsa sıkıştırır,
+     kayıt sırasında butonu devre dışı bırakır. */
   function handleFormSubmit(e) {
     e.preventDefault();
-    const title = document.getElementById('bucketTitle').value.trim();
-    if (!title) { document.getElementById('bucketTitle').focus(); return; }
-
+    const title     = document.getElementById('bucketTitle').value.trim();
     const fileInput = document.getElementById('bucketPhoto');
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+
+    if (!title) { document.getElementById('bucketTitle').focus(); return; }
 
     const persist = (photoDataUrl) => {
       if (editingId !== null) {
@@ -183,10 +175,12 @@ const bucket = (function () {
       }
       save();
       render();
+      setButtonLoading(submitBtn, false);
       closeAddModal();
     };
 
     if (fileInput.files.length) {
+      setButtonLoading(submitBtn, true);
       readFile(fileInput.files[0]).then(persist);
     } else {
       persist(editingId !== null ? null : null);
@@ -213,8 +207,9 @@ const bucket = (function () {
     const item = items.find(it => it.id === id);
     if (item) {
       memories.openWithData(item.title, (newMemoryId) => {
-        // Store the link so uncheck can delete it
-        items = items.map(it => it.id === id ? { ...it, linkedMemoryId: newMemoryId } : it);
+        items = items.map(it =>
+          it.id === id ? { ...it, linkedMemoryId: newMemoryId } : it
+        );
         save();
       });
     }
@@ -241,7 +236,9 @@ const bucket = (function () {
     if (item && item.linkedMemoryId) {
       memories.deleteById(item.linkedMemoryId);
     }
-    items = items.map(it => it.id === id ? { ...it, done: false, linkedMemoryId: null } : it);
+    items = items.map(it =>
+      it.id === id ? { ...it, done: false, linkedMemoryId: null } : it
+    );
     save();
     render();
   }

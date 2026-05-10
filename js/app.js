@@ -11,8 +11,15 @@
  */
 (function () {
 
-  const BG_KEY    = 'love_bg';
-  const THEME_KEY = 'love_theme';
+  const BG_KEY              = 'love_bg';
+  const THEME_KEY           = 'love_theme';
+  const BG_COMPRESS_PX      = 1920;
+  const BG_COMPRESS_QUALITY = 0.80;
+  const NAV_HEIGHT          = 56;
+  const NAV_SCROLL_OFFSET   = 16;
+  const HEART_BURST_COUNT   = 4;
+  const HEART_BURST_DELAY_MS = 700;
+  const HEART_INTERVAL_MS   = 2800;
 
   /* ── Arkaplan ──────────────────────────────────────── */
 
@@ -25,9 +32,9 @@
     if (!file) return;
     const reader = new FileReader();
     reader.onload = function (ev) {
-      compressImage(ev.target.result, 1920, 0.80).then(function (dataUrl) {
+      compressImage(ev.target.result, BG_COMPRESS_PX, BG_COMPRESS_QUALITY).then(function (dataUrl) {
         applyBg(dataUrl);
-        try { localStorage.setItem(BG_KEY, dataUrl); } catch (_) {}
+        storage.setRaw(BG_KEY, dataUrl);
       });
     };
     reader.readAsDataURL(file);
@@ -50,7 +57,7 @@
   function toggleTheme() {
     const isDay    = document.body.classList.contains('day-mode');
     const newTheme = isDay ? 'night' : 'day';
-    localStorage.setItem(THEME_KEY, newTheme);
+    storage.setRaw(THEME_KEY, newTheme);
     applyTheme(newTheme);
   }
 
@@ -81,8 +88,10 @@
   }
 
   function startFloatingHearts() {
-    for (let i = 0; i < 4; i++) setTimeout(spawnHeart, i * 700);
-    setInterval(spawnHeart, 2800);
+    for (let i = 0; i < HEART_BURST_COUNT; i++) {
+      setTimeout(spawnHeart, i * HEART_BURST_DELAY_MS);
+    }
+    setInterval(spawnHeart, HEART_INTERVAL_MS);
   }
 
   /* ── Bootstrap ─────────────────────────────────────── */
@@ -90,14 +99,14 @@
   document.addEventListener('DOMContentLoaded', function () {
 
     /* Arkaplan */
-    const savedBg = localStorage.getItem(BG_KEY);
+    const savedBg = storage.getRaw(BG_KEY);
     if (savedBg) applyBg(savedBg);
 
     const bgInput = document.getElementById('bgUpload');
     if (bgInput) bgInput.addEventListener('change', handleBgUpload);
 
     /* Tema */
-    const savedTheme = localStorage.getItem(THEME_KEY) || 'night';
+    const savedTheme = storage.getRaw(THEME_KEY) || 'night';
     applyTheme(savedTheme);
     const themeBtn = document.getElementById('themeToggle');
     if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
@@ -123,11 +132,10 @@
       document.getElementById('gamesSection'),
     ].filter(Boolean);
 
-    const navLinks  = document.querySelectorAll('.nav-link');
-    const navHeight = 56;
+    const navLinks = document.querySelectorAll('.nav-link');
 
     function updateActiveLink() {
-      const scrollY = window.scrollY + navHeight + 16;
+      const scrollY = window.scrollY + NAV_HEIGHT + NAV_SCROLL_OFFSET;
       let active = sections[0];
       sections.forEach(sec => {
         if (sec && sec.offsetTop <= scrollY) active = sec;

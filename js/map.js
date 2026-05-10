@@ -11,76 +11,68 @@
  */
 const mapModule = (function () {
 
-  const STORAGE_KEY = 'love_map_locations';
-  let locations = [];
-  let map = null;
-  let leafletMarkers = {};   // id → L.Marker
-  let isPickingMode = false;
+  const STORAGE_KEY        = 'love_map_locations';
+  const DEFAULT_CENTER     = [39.9334, 32.8597];
+  const DEFAULT_ZOOM       = 6;
+  const MAX_ZOOM           = 19;
+  const FIT_PADDING        = [40, 40];
+  const FIT_MAX_ZOOM       = 12;
+  const MIN_VIEW_ZOOM      = 10;
+  const MARKER_SIZE        = 28;
+  const MARKER_ANCHOR      = 14;
+  const POPUP_ANCHOR_Y     = -32;
+  const POPUP_MAX_WIDTH    = 270;
+  const POPUP_MIN_WIDTH    = 200;
+  const PHOTO_COMPRESS_PX  = 1200;
+  const PHOTO_COMPRESS_Q   = 0.80;
+  const COORDS_DECIMALS    = 4;
+
+  let locations      = [];
+  let map            = null;
+  let leafletMarkers = {};
+  let isPickingMode  = false;
   let pendingLatlng  = null;
-  let lastAddedLoc   = null; // location waiting for memory-confirm answer
+  let lastAddedLoc   = null;
 
   /* ── Persistence ─────────────────────────────────── */
 
   function load() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      locations = raw ? JSON.parse(raw) : [];
-    } catch (_) {
-      locations = [];
-    }
+    locations = storage.get(STORAGE_KEY, []);
   }
 
   function save() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(locations));
-    } catch (_) {
+    if (!storage.set(STORAGE_KEY, locations)) {
       alert('Depolama alanı dolmak üzere.');
     }
   }
 
-  /* ── Helpers ─────────────────────────────────────── */
-
-  function escHtml(str) {
-    return String(str || '')
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  }
-
-  function fmtDate(dateStr) {
-    if (!dateStr) return '';
-    const d = new Date(dateStr + 'T00:00:00');
-    return isNaN(d.getTime())
-      ? dateStr
-      : d.toLocaleDateString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric' });
-  }
-
-  /* ── Heart icon ───────────────────────────────────── */
+  /* ── Heart icon ──────────────────────────────────── */
 
   function heartIcon() {
     return L.divIcon({
-      className: '',
-      html: '<div class="map-heart-marker">❤</div>',
-      iconSize:   [28, 28],
-      iconAnchor: [14, 28],
-      popupAnchor: [0, -32]
+      className:   '',
+      html:        '<div class="map-heart-marker">❤</div>',
+      iconSize:    [MARKER_SIZE, MARKER_SIZE],
+      iconAnchor:  [MARKER_ANCHOR, MARKER_SIZE],
+      popupAnchor: [0, POPUP_ANCHOR_Y]
     });
   }
 
-  /* ── Popup HTML ───────────────────────────────────── */
+  /* ── Popup HTML ──────────────────────────────────── */
 
   function buildPopup(loc) {
     let html = '<div class="map-popup">';
     if (loc.photoUrl) {
-      html += `<img class="map-popup-photo" src="${escHtml(loc.photoUrl)}"
-                    alt="${escHtml(loc.name)}" loading="lazy" />`;
+      html += `<img class="map-popup-photo" src="${escapeHtml(loc.photoUrl)}"
+                    alt="${escapeAttr(loc.name)}" loading="lazy" />`;
     }
-    html += `<div class="map-popup-body">`;
-    html += `<h4 class="map-popup-name">${escHtml(loc.name)}</h4>`;
+    html += '<div class="map-popup-body">';
+    html += `<h4 class="map-popup-name">${escapeHtml(loc.name)}</h4>`;
     if (loc.date) {
-      html += `<p class="map-popup-date">${escHtml(fmtDate(loc.date))}</p>`;
+      html += `<p class="map-popup-date">${escapeHtml(formatDate(loc.date))}</p>`;
     }
     if (loc.note) {
-      html += `<p class="map-popup-note">${escHtml(loc.note)}</p>`;
+      html += `<p class="map-popup-note">${escapeHtml(loc.note)}</p>`;
     }
     html += `<div class="map-popup-actions">
                <button class="map-popup-delete" data-id="${loc.id}">🗑 Sil</button>
@@ -89,13 +81,13 @@ const mapModule = (function () {
     return html;
   }
 
-  /* ── Marker management ────────────────────────────── */
+  /* ── Marker management ───────────────────────────── */
 
   function addMarkerToMap(loc) {
     if (!map) return;
     const marker = L.marker([loc.lat, loc.lng], { icon: heartIcon() })
       .addTo(map)
-      .bindPopup(buildPopup(loc), { maxWidth: 270, minWidth: 200 });
+      .bindPopup(buildPopup(loc), { maxWidth: POPUP_MAX_WIDTH, minWidth: POPUP_MIN_WIDTH });
 
     marker.on('popupopen', function () {
       const btn = document.querySelector(`.map-popup-delete[data-id="${loc.id}"]`);
@@ -111,22 +103,21 @@ const mapModule = (function () {
     locations.forEach(loc => addMarkerToMap(loc));
   }
 
-  /* ── Map initialisation ───────────────────────────── */
+  /* ── Map initialisation ──────────────────────────── */
 
   function initMap() {
     const el = document.getElementById('mainLeafletMap');
     if (!el || !window.L) return;
 
     map = L.map('mainLeafletMap', {
-      center: [39.9334, 32.8597],
-      zoom: 6,
+      center: DEFAULT_CENTER,
+      zoom:   DEFAULT_ZOOM,
       zoomControl: true
     });
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution:
-        '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      maxZoom: 19
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom: MAX_ZOOM
     }).addTo(map);
 
     map.on('click', function (e) {
@@ -140,11 +131,11 @@ const mapModule = (function () {
 
     if (locations.length > 0) {
       const bounds = locations.map(l => [l.lat, l.lng]);
-      try { map.fitBounds(bounds, { padding: [40, 40], maxZoom: 12 }); } catch (_) {}
+      try { map.fitBounds(bounds, { padding: FIT_PADDING, maxZoom: FIT_MAX_ZOOM }); } catch (_) {}
     }
   }
 
-  /* ── Picking mode ─────────────────────────────────── */
+  /* ── Picking mode ────────────────────────────────── */
 
   function enterPickingMode() {
     isPickingMode = true;
@@ -163,7 +154,7 @@ const mapModule = (function () {
     if (mapEl) mapEl.classList.remove('picking');
   }
 
-  /* ── Marker modal ─────────────────────────────────── */
+  /* ── Marker modal ────────────────────────────────── */
 
   function openMarkerModal() {
     document.getElementById('markerForm').reset();
@@ -185,7 +176,7 @@ const mapModule = (function () {
     if (!hint) return;
     if (pendingLatlng) {
       hint.textContent =
-        `📍 Konum seçildi: ${pendingLatlng.lat.toFixed(4)}, ${pendingLatlng.lng.toFixed(4)}`;
+        `📍 Konum seçildi: ${pendingLatlng.lat.toFixed(COORDS_DECIMALS)}, ${pendingLatlng.lng.toFixed(COORDS_DECIMALS)}`;
       hint.classList.add('selected');
     } else {
       hint.textContent = 'Henüz konum seçilmedi';
@@ -206,6 +197,7 @@ const mapModule = (function () {
     const date      = document.getElementById('markerDate').value;
     const note      = document.getElementById('markerNote').value.trim();
     const latlng    = { ...pendingLatlng };
+    const submitBtn = e.target.querySelector('button[type="submit"]');
 
     const persist = (photoDataUrl) => {
       const loc = {
@@ -220,14 +212,16 @@ const mapModule = (function () {
       };
       lastAddedLoc = loc;
       addLocationInternal(loc);
+      setButtonLoading(submitBtn, false);
       closeMarkerModal();
       openMapMemoryConfirm();
     };
 
     if (fileInput && fileInput.files.length) {
+      setButtonLoading(submitBtn, true);
       const reader = new FileReader();
       reader.onload = ev => {
-        compressImage(ev.target.result, 1200, 0.80).then(persist);
+        compressImage(ev.target.result, PHOTO_COMPRESS_PX, PHOTO_COMPRESS_Q).then(persist);
       };
       reader.readAsDataURL(fileInput.files[0]);
     } else {
@@ -235,7 +229,7 @@ const mapModule = (function () {
     }
   }
 
-  /* ── Map → Memory confirm modal ───────────────────── */
+  /* ── Map → Memory confirm modal ──────────────────── */
 
   function openMapMemoryConfirm() {
     document.getElementById('mapMemoryConfirmModal').classList.add('open');
@@ -254,9 +248,7 @@ const mapModule = (function () {
     if (!loc) return;
 
     memories.openWithData(loc.name, function (newMemoryId) {
-      // Link memory → location (update locationId on memory card)
       memories.linkLocation(newMemoryId, loc.id);
-      // Link location → memory
       locations = locations.map(l =>
         l.id === loc.id ? { ...l, memoryId: newMemoryId } : l
       );
@@ -269,7 +261,7 @@ const mapModule = (function () {
     closeMapMemoryConfirm();
   }
 
-  /* ── Location CRUD ────────────────────────────────── */
+  /* ── Location CRUD ───────────────────────────────── */
 
   function addLocationInternal(loc) {
     locations.push(loc);
@@ -281,7 +273,7 @@ const mapModule = (function () {
     const id  = data.id || Date.now();
     const loc = { ...data, id };
     addLocationInternal(loc);
-    if (map) map.setView([loc.lat, loc.lng], Math.max(map.getZoom(), 10));
+    if (map) map.setView([loc.lat, loc.lng], Math.max(map.getZoom(), MIN_VIEW_ZOOM));
     return id;
   }
 
@@ -310,7 +302,6 @@ const mapModule = (function () {
 
     document.getElementById('closeMarkerModal').addEventListener('click', closeMarkerModal);
     document.getElementById('markerForm').addEventListener('submit', handleMarkerSubmit);
-
     document.getElementById('mapMemoryConfirmYes').addEventListener('click', handleMapMemoryConfirmYes);
     document.getElementById('mapMemoryConfirmNo').addEventListener('click', handleMapMemoryConfirmNo);
 
