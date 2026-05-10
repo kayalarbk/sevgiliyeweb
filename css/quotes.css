@@ -5,7 +5,7 @@
 /* ── Toggle button ── */
 .quotes-toggle-btn {
   position: fixed;
-  bottom: 122px;
+  bottom: 16px;
   right: 16px;
   z-index: var(--z-quotes);
   width: 42px;
@@ -24,7 +24,12 @@
   transition:
     background var(--transition-fast),
     transform var(--transition-fast),
-    box-shadow var(--transition-fast);
+    box-shadow var(--transition-fast),
+    bottom var(--transition-base);
+}
+
+body.player-visible .quotes-toggle-btn {
+  bottom: 122px;
 }
 
 .quotes-toggle-btn:hover {
@@ -36,7 +41,7 @@
 /* ── Widget container ── */
 .quotes-widget {
   position: fixed;
-  bottom: 172px;    /* sits above the toggle button */
+  bottom: 66px;
   right: 16px;
   z-index: var(--z-quotes);
   width: clamp(210px, 26vw, 300px);
@@ -55,7 +60,12 @@
   transform: translateY(0) scale(1);
   transition:
     opacity var(--transition-base),
-    transform var(--transition-base);
+    transform var(--transition-base),
+    bottom var(--transition-base);
+}
+
+body.player-visible .quotes-widget {
+  bottom: 172px;
 }
 
 .quotes-widget.quotes-hidden {
@@ -114,12 +124,14 @@
 
 /* ── Mobile: expand to full width just above player ── */
 @media (max-width: 480px) {
-  .quotes-toggle-btn {
+  body.player-visible .quotes-toggle-btn {
     bottom: 130px;
+  }
+  body.player-visible .quotes-widget {
+    bottom: 180px;
   }
   .quotes-widget {
     width: calc(100vw - 32px);
     right: 16px;
-    bottom: 180px;
   }
 }

@@ -171,6 +171,16 @@ const player = (function () {
     btnNext.addEventListener('click', nextTrack);
     upload.addEventListener('change', handleUpload);
 
+    // Toggle player bar visibility
+    const toggleBtn = document.getElementById('btnTogglePlayer');
+    const playerBar = document.getElementById('playerBar');
+    if (toggleBtn && playerBar) {
+      toggleBtn.addEventListener('click', () => {
+        const hidden = playerBar.classList.toggle('player-hidden');
+        document.body.classList.toggle('player-visible', !hidden);
+      });
+    }
+
     // Progress bar events
     audioEl.addEventListener('timeupdate',    updateProgress);
     audioEl.addEventListener('loadedmetadata', handleMetadata);
