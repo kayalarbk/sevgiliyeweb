@@ -99,6 +99,9 @@
 
   document.addEventListener('DOMContentLoaded', function () {
 
+    /* Kimlik doğrulama (her şeyden önce çalışır) */
+    auth.init();
+
     /* Arkaplan */
     const savedBg = storage.getRaw(BG_KEY);
     if (savedBg) applyBg(savedBg);

@@ -45,6 +45,10 @@ const bucket = (function () {
       ? `<img class="bucket-card-photo" src="${item.photo}" alt="${escapeHtml(item.title)}" loading="lazy" />`
       : `<div class="bucket-card-photo-placeholder" aria-hidden="true">🌟</div>`;
 
+    const addedByHtml = item.addedBy
+      ? `<span class="card-added-by">by *${escapeHtml(item.addedBy)}</span>`
+      : '';
+
     el.innerHTML = `
       <div class="bucket-card-img-wrap">
         ${photoHtml}
@@ -56,7 +60,10 @@ const bucket = (function () {
       </div>
       <div class="bucket-card-body">
         <input class="bucket-checkbox" type="checkbox" aria-label="Tamamlandı" ${item.done ? 'checked' : ''} />
-        <span class="bucket-card-title">${escapeHtml(item.title)}</span>
+        <div class="bucket-card-text">
+          <span class="bucket-card-title">${escapeHtml(item.title)}</span>
+          ${addedByHtml}
+        </div>
       </div>`;
 
     el.querySelector('.bucket-checkbox').addEventListener('change', e => {
@@ -171,7 +178,8 @@ const bucket = (function () {
           return { ...it, title, photo: photoDataUrl !== null ? photoDataUrl : it.photo };
         });
       } else {
-        items.unshift({ id: Date.now(), title, photo: photoDataUrl, done: false });
+        const currentUser = (typeof auth !== 'undefined') ? auth.getUser() : null;
+        items.unshift({ id: Date.now(), title, photo: photoDataUrl, done: false, addedBy: currentUser ? currentUser.username : '' });
       }
       save();
       render();

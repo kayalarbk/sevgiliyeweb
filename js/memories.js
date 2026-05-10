@@ -30,6 +30,7 @@ const memories = (function () {
       date:       c.date,
       photos:     c.photos || (c.photo ? [c.photo] : []),
       locationId: c.locationId || null,
+      addedBy:    c.addedBy   || '',
     }));
   }
 
@@ -75,6 +76,10 @@ const memories = (function () {
       ? `<span class="memory-location-badge" title="Haritada konumu var">📍</span>`
       : '';
 
+    const addedByHtml = card.addedBy
+      ? `<span class="card-added-by">by *${escapeHtml(card.addedBy)}</span>`
+      : '';
+
     el.innerHTML = `
       <div class="memory-card-img-wrap">
         ${photoHtml}
@@ -88,6 +93,7 @@ const memories = (function () {
       <div class="memory-card-body">
         <h3 class="memory-card-title">${escapeHtml(card.title)}</h3>
         <time class="memory-card-date" datetime="${card.date || ''}">${formatDate(card.date)}</time>
+        ${addedByHtml}
       </div>`;
 
     el.addEventListener('click', e => {
@@ -316,8 +322,9 @@ const memories = (function () {
 
   /* Yeni anı kaydını tamamlar; gerekirse harita konumunu ekler */
   function persistNewCard(title, dateVal, newPhotos, addLoc, locName, locCoords) {
-    const newId   = Date.now();
-    const newCard = { id: newId, title, date: dateVal, photos: newPhotos, locationId: null };
+    const newId      = Date.now();
+    const currentUser = (typeof auth !== 'undefined') ? auth.getUser() : null;
+    const newCard = { id: newId, title, date: dateVal, photos: newPhotos, locationId: null, addedBy: currentUser ? currentUser.username : '' };
     cards.unshift(newCard);
     saveCards();
     renderCards();
