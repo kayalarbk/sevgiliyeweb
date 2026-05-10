@@ -143,6 +143,13 @@ const memories = (function () {
     renderCards();
   }
 
+  // Silent delete called by bucket.js (no confirm dialog)
+  function deleteById(id) {
+    cards = cards.filter(c => c.id !== id);
+    saveCards();
+    renderCards();
+  }
+
   /* ── Lightbox ────────────────────────────────────── */
 
   function openLightbox(card) {
@@ -199,12 +206,13 @@ const memories = (function () {
 
   /* ── Add / Edit modal ────────────────────────────── */
 
-  // Photo pre-filled programmatically (e.g. from bucket list confirm)
-  let pendingPhoto = null;
+  let pendingPhoto    = null;
+  let onSavedCallback = null;  // called with new memory id after save
 
   function openAddModal() {
-    editingId    = null;
-    pendingPhoto = null;
+    editingId       = null;
+    pendingPhoto    = null;
+    onSavedCallback = null;
     document.getElementById('modalTitle').textContent = 'Anı Ekle';
     document.getElementById('memoryForm').reset();
     document.getElementById('addMemoryModal').classList.add('open');
@@ -212,10 +220,11 @@ const memories = (function () {
     document.getElementById('memoryTitle').focus();
   }
 
-  // Called by bucket.js when user confirms adding a done item to memories
-  function openWithData(title) {
-    editingId    = null;
-    pendingPhoto = null;
+  // Called by bucket.js; onSaved(newMemoryId) fires after user saves
+  function openWithData(title, onSaved) {
+    editingId       = null;
+    pendingPhoto    = null;
+    onSavedCallback = onSaved || null;
     document.getElementById('modalTitle').textContent = 'Anı Ekle';
     document.getElementById('memoryForm').reset();
     document.getElementById('memoryTitle').value = title || '';
@@ -239,8 +248,9 @@ const memories = (function () {
     document.getElementById('addMemoryModal').classList.remove('open');
     document.getElementById('memoryForm').reset();
     document.body.style.overflow = '';
-    editingId    = null;
-    pendingPhoto = null;
+    editingId       = null;
+    pendingPhoto    = null;
+    onSavedCallback = null;
   }
 
   function handleFormSubmit(e) {
@@ -263,12 +273,18 @@ const memories = (function () {
             photos: newPhotos.length ? [...c.photos, ...newPhotos] : c.photos,
           };
         });
+        saveCards();
+        renderCards();
+        closeAddModal();
       } else {
-        cards.unshift({ id: Date.now(), title, date: dateVal, photos: newPhotos });
+        const newId = Date.now();
+        cards.unshift({ id: newId, title, date: dateVal, photos: newPhotos });
+        saveCards();
+        renderCards();
+        const cb = onSavedCallback;
+        closeAddModal();          // clears onSavedCallback
+        if (cb) cb(newId);        // notify bucket.js with new memory id
       }
-      saveCards();
-      renderCards();
-      closeAddModal();
     };
 
     if (fileInput.files.length) {
@@ -307,6 +323,6 @@ const memories = (function () {
     });
   }
 
-  return { init, openWithData };
+  return { init, openWithData, deleteById };
 
 })();

@@ -1,9 +1,10 @@
 const bucket = (function () {
 
   const STORAGE_KEY = 'love_bucket';
-  let items     = [];
-  let editingId = null;
-  let pendingDoneId = null;  // item awaiting memory-confirm
+  let items          = [];
+  let editingId      = null;
+  let pendingDoneId  = null;  // item awaiting memory-confirm
+  let pendingUncheckId = null; // item awaiting uncheck-warning confirm
 
   /* ── Persistence ─────────────────────────────────── */
 
@@ -106,6 +107,17 @@ const bucket = (function () {
   /* ── Toggle done ─────────────────────────────────── */
 
   function toggleDone(id, isDone) {
+    if (!isDone) {
+      const item = items.find(it => it.id === id);
+      if (item && item.linkedMemoryId) {
+        // Intercepted: show warning before actually unchecking
+        pendingUncheckId = id;
+        render();  // restore checked state visually
+        openUncheckModal();
+        return;
+      }
+    }
+
     items = items.map(it => it.id === id ? { ...it, done: isDone } : it);
     save();
     render();
@@ -195,11 +207,43 @@ const bucket = (function () {
   }
 
   function handleConfirmYes() {
-    const id = pendingDoneId;   // id'yi kapat öncesi sakla
+    const id = pendingDoneId;
     closeConfirmModal();
     if (id === null) return;
     const item = items.find(it => it.id === id);
-    if (item) memories.openWithData(item.title);  // fotoğrafı kullanıcı ekler
+    if (item) {
+      memories.openWithData(item.title, (newMemoryId) => {
+        // Store the link so uncheck can delete it
+        items = items.map(it => it.id === id ? { ...it, linkedMemoryId: newMemoryId } : it);
+        save();
+      });
+    }
+  }
+
+  /* ── Uncheck warning modal ───────────────────────── */
+
+  function openUncheckModal() {
+    document.getElementById('bucketUncheckModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeUncheckModal() {
+    document.getElementById('bucketUncheckModal').classList.remove('open');
+    document.body.style.overflow = '';
+    pendingUncheckId = null;
+  }
+
+  function handleUncheckConfirm() {
+    const id = pendingUncheckId;
+    closeUncheckModal();
+    if (id === null) return;
+    const item = items.find(it => it.id === id);
+    if (item && item.linkedMemoryId) {
+      memories.deleteById(item.linkedMemoryId);
+    }
+    items = items.map(it => it.id === id ? { ...it, done: false, linkedMemoryId: null } : it);
+    save();
+    render();
   }
 
   /* ── Init ────────────────────────────────────────── */
@@ -215,16 +259,21 @@ const bucket = (function () {
     document.getElementById('bucketForm').addEventListener('submit', handleFormSubmit);
     document.getElementById('bucketConfirmYes').addEventListener('click', handleConfirmYes);
     document.getElementById('bucketConfirmNo').addEventListener('click', closeConfirmModal);
+    document.getElementById('bucketUncheckYes').addEventListener('click', handleUncheckConfirm);
+    document.getElementById('bucketUncheckNo').addEventListener('click', closeUncheckModal);
 
     const addOverlay     = document.getElementById('addBucketModal');
     const confirmOverlay = document.getElementById('bucketConfirmModal');
+    const uncheckOverlay = document.getElementById('bucketUncheckModal');
     addOverlay.addEventListener('click',     e => { if (e.target === addOverlay)     closeAddModal(); });
     confirmOverlay.addEventListener('click', e => { if (e.target === confirmOverlay) closeConfirmModal(); });
+    uncheckOverlay.addEventListener('click', e => { if (e.target === uncheckOverlay) closeUncheckModal(); });
 
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape') {
         closeAddModal();
         closeConfirmModal();
+        closeUncheckModal();
       }
     });
   }

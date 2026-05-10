@@ -133,6 +133,19 @@
   </div>
 
   <!-- ═══════════════════════════════════════
+       BUCKET UNCHECK WARNING MODAL
+  ════════════════════════════════════════ -->
+  <div class="modal-overlay" id="bucketUncheckModal" role="dialog" aria-modal="true" aria-label="Uyarı">
+    <div class="modal-box modal-box--sm">
+      <p class="confirm-text">Bu planı tamamlanmadı olarak işaretlersen, eklenen anı da silinecek. Devam etmek istiyor musun?</p>
+      <div class="confirm-actions">
+        <button class="btn-confirm-yes" id="bucketUncheckYes" type="button">Evet, Sil</button>
+        <button class="btn-confirm-no"  id="bucketUncheckNo"  type="button">Hayır</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
        ADD MEMORY MODAL
   ════════════════════════════════════════ -->
   <div class="modal-overlay" id="addMemoryModal" role="dialog" aria-modal="true" aria-label="Add a memory">
@@ -216,6 +229,13 @@
     </div>
 
     <audio id="audioElement" preload="metadata"></audio>
+  </footer>
+
+  <!-- ═══════════════════════════════════════
+       FOOTER
+  ════════════════════════════════════════ -->
+  <footer class="app-footer">
+    <p class="app-footer-text">Barış Kaya ürünüdür &nbsp;•&nbsp; 15/08/2024'ten sonsuza kadar ♥</p>
   </footer>
 
   <!-- JS modules (order matters: modules before app.js) -->
