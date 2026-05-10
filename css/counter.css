@@ -69,12 +69,13 @@
 
 /* ── Numeric value ── */
 .counter-value {
-  font-family: var(--font-main);
+  font-family: 'Playfair Display', var(--font-main);
   font-size: clamp(2rem, 6vw, 3.6rem);
   font-weight: 700;
   color: var(--color-primary-light);
   line-height: 1;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
+  font-variant-numeric: lining-nums tabular-nums;
   transition: transform var(--transition-fast);
   will-change: transform;
 }
