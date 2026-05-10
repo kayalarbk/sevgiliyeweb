@@ -24,7 +24,8 @@
   /* ── Arkaplan ──────────────────────────────────────── */
 
   function applyBg(dataUrl) {
-    document.body.style.backgroundImage = 'url(' + dataUrl + ')';
+    const bgEl = document.getElementById('bgPhoto');
+    if (bgEl) bgEl.style.backgroundImage = 'url(' + dataUrl + ')';
   }
 
   function handleBgUpload(e) {

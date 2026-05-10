@@ -43,7 +43,15 @@
   --transition-base: 300ms ease;
   --transition-slow: 600ms ease;
 
-  /* Z-index layers */
+  /* Z-index layers (low → high)
+     bg-photo: 0  (arka plan fotoğrafı — en alt katman)
+     bg-overlay: 0, DOM sırası bg-photo'dan sonra, overlay üste çıkar
+     content: 1   (sayfa içeriği)
+     player: 100  (müzik çalar)
+     quotes: 110  (alıntı widget)
+     nav: 120     (header — her zaman üstte)
+     modal: 200   (modallar)
+     lightbox: 210 */
   --z-bg:       0;
   --z-content:  1;
   --z-player:   100;
@@ -128,9 +136,6 @@ body {
   font-family: var(--font-ui);
   color: var(--color-text);
   background-color: var(--color-bg);
-  background-size: cover;
-  background-position: center center;
-  background-attachment: fixed;
   min-height: 100vh;
   overflow-x: hidden;
   padding-top: 56px;
@@ -151,7 +156,18 @@ button {
 input, button, label, textarea { font-family: inherit; }
 h1, h2, h3 { line-height: 1.2; }
 
-/* ── Background overlay ── */
+/* ── Background photo (en alt katman) ── */
+.bg-photo {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-bg);
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+
+/* ── Background overlay (bg-photo üstünde, DOM sırası ile) ── */
 .bg-overlay {
   position: fixed;
   inset: 0;
