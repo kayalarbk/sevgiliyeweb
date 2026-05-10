@@ -1,0 +1,299 @@
+/* ═══════════════════════════════════════════════════
+   bucket.css — "Birlikte Yapacaklarımız" section
+════════════════════════════════════════════════════ */
+
+/* ── Section wrapper ── */
+.section-bucket {
+  padding: 72px 0 56px;
+  min-height: 100vh;
+}
+
+/* ── Header row ── */
+.bucket-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
+}
+
+.btn-add-bucket {
+  padding: 8px 22px;
+  background: var(--color-primary);
+  border: none;
+  border-radius: var(--radius-pill);
+  color: #fff;
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.btn-add-bucket:hover {
+  background: var(--color-accent);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-glow);
+}
+
+/* ── Card grid ── */
+.bucket-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+/* ── Empty state ── */
+.bucket-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  padding: 48px 0;
+  font-style: italic;
+}
+
+/* ── Card ── */
+.bucket-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: var(--shadow-soft);
+  transition:
+    transform var(--transition-base),
+    box-shadow var(--transition-base),
+    border-color var(--transition-base),
+    opacity var(--transition-base);
+  display: flex;
+  flex-direction: column;
+}
+
+.bucket-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-glow);
+  border-color: rgba(233, 30, 140, 0.3);
+}
+
+.bucket-card.done {
+  opacity: 0.55;
+}
+
+.bucket-card.done:hover {
+  opacity: 0.75;
+}
+
+/* ── Card image area ── */
+.bucket-card-img-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.04);
+  flex-shrink: 0;
+}
+
+.bucket-card-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform var(--transition-base);
+}
+
+.bucket-card:hover .bucket-card-photo {
+  transform: scale(1.04);
+}
+
+.bucket-card-photo-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.4rem;
+  color: var(--color-text-muted);
+  opacity: 0.4;
+}
+
+/* Done overlay checkmark on image */
+.bucket-done-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(16, 5, 13, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  opacity: 0;
+  transition: opacity var(--transition-base);
+}
+
+.bucket-card.done .bucket-done-overlay {
+  opacity: 1;
+}
+
+/* Action buttons (edit/delete) */
+.bucket-card-actions {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.bucket-card:hover .bucket-card-actions {
+  opacity: 1;
+}
+
+.bucket-action-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background: rgba(16, 5, 13, 0.75);
+  border: 1px solid var(--color-border);
+  backdrop-filter: blur(8px);
+  font-size: 0.78rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+}
+
+.bucket-action-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  transform: scale(1.12);
+}
+
+/* ── Card body ── */
+.bucket-card-body {
+  padding: 14px 16px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+/* Custom checkbox */
+.bucket-checkbox {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 2px solid var(--color-border);
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+  transition:
+    border-color var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.bucket-checkbox:checked {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.bucket-checkbox:checked::after {
+  content: '✓';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.bucket-checkbox:hover {
+  border-color: var(--color-primary-light);
+}
+
+.bucket-card-title {
+  font-family: var(--font-main);
+  font-size: 0.92rem;
+  color: var(--color-text);
+  line-height: 1.4;
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+  transition: text-decoration var(--transition-fast), color var(--transition-fast);
+}
+
+.bucket-card.done .bucket-card-title {
+  text-decoration: line-through;
+  color: var(--color-text-muted);
+}
+
+/* ── Confirm modal tweaks ── */
+.modal-box--sm {
+  max-width: 360px;
+  text-align: center;
+}
+
+.confirm-text {
+  font-size: 0.98rem;
+  color: var(--color-text);
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.btn-confirm-yes {
+  padding: 9px 26px;
+  background: var(--color-primary);
+  border: none;
+  border-radius: var(--radius-pill);
+  color: #fff;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+}
+
+.btn-confirm-yes:hover {
+  background: var(--color-accent);
+  transform: translateY(-1px);
+}
+
+.btn-confirm-no {
+  padding: 9px 26px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  color: var(--color-text-muted);
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.btn-confirm-no:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-text);
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .bucket-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 14px;
+  }
+  .section-bucket {
+    padding: 56px 0 48px;
+  }
+}

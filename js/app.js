@@ -99,6 +99,7 @@
     // Initialise feature modules
     counter.init();
     player.init();
+    bucket.init();
     memories.init();
     quotes.init();
 
@@ -108,6 +109,7 @@
     // Active nav link highlight on scroll
     const sections  = [
       document.getElementById('counterSection'),
+      document.getElementById('bucketSection'),
       document.getElementById('memoriesSection'),
     ];
     const navLinks  = document.querySelectorAll('.nav-link');

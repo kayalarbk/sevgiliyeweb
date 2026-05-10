@@ -199,10 +199,26 @@ const memories = (function () {
 
   /* ── Add / Edit modal ────────────────────────────── */
 
+  // Photo pre-filled programmatically (e.g. from bucket list confirm)
+  let pendingPhoto = null;
+
   function openAddModal() {
-    editingId = null;
+    editingId    = null;
+    pendingPhoto = null;
     document.getElementById('modalTitle').textContent = 'Anı Ekle';
     document.getElementById('memoryForm').reset();
+    document.getElementById('addMemoryModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    document.getElementById('memoryTitle').focus();
+  }
+
+  // Called by bucket.js when user confirms adding a done item to memories
+  function openWithData(title, photoDataUrl) {
+    editingId    = null;
+    pendingPhoto = photoDataUrl || null;
+    document.getElementById('modalTitle').textContent = 'Anı Ekle';
+    document.getElementById('memoryForm').reset();
+    document.getElementById('memoryTitle').value = title || '';
     document.getElementById('addMemoryModal').classList.add('open');
     document.body.style.overflow = 'hidden';
     document.getElementById('memoryTitle').focus();
@@ -223,7 +239,8 @@ const memories = (function () {
     document.getElementById('addMemoryModal').classList.remove('open');
     document.getElementById('memoryForm').reset();
     document.body.style.overflow = '';
-    editingId = null;
+    editingId    = null;
+    pendingPhoto = null;
   }
 
   function handleFormSubmit(e) {
@@ -256,6 +273,8 @@ const memories = (function () {
 
     if (fileInput.files.length) {
       readFiles(fileInput.files).then(persist);
+    } else if (pendingPhoto) {
+      persist([pendingPhoto]);
     } else {
       persist([]);
     }
@@ -288,6 +307,6 @@ const memories = (function () {
     });
   }
 
-  return { init };
+  return { init, openWithData };
 
 })();

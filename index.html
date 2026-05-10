@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="css/counter.css" />
   <link rel="stylesheet" href="css/player.css" />
   <link rel="stylesheet" href="css/memories.css" />
+  <link rel="stylesheet" href="css/bucket.css" />
   <link rel="stylesheet" href="css/quotes.css" />
 </head>
 <body>
@@ -23,6 +24,7 @@
     <nav class="nav-links">
       <a class="nav-link" href="#counterSection">Ana Sayfa</a>
       <a class="nav-link" href="#memoriesSection">Anılar</a>
+      <a class="nav-link" href="#bucketSection">Planlar</a>
     </nav>
     <div class="nav-actions">
       <label for="bgUpload" class="bg-upload-label" title="Change background photo">&#128444;</label>
@@ -66,6 +68,17 @@
 
     </section>
 
+    <!-- ── BUCKET LIST SECTION ── -->
+    <section class="section-bucket" id="bucketSection">
+      <div class="bucket-header">
+        <h2 class="section-title">Birlikte Yapacaklarımız</h2>
+        <button class="btn-add-bucket" id="btnAddBucket" type="button">+ Ekle</button>
+      </div>
+      <div class="bucket-grid" id="bucketGrid">
+        <!-- Cards injected by bucket.js -->
+      </div>
+    </section>
+
     <!-- ── MEMORIES SECTION ── -->
     <section class="section-memories" id="memoriesSection">
       <div class="memories-header">
@@ -80,6 +93,40 @@
     </section>
 
   </main>
+
+  <!-- ═══════════════════════════════════════
+       ADD BUCKET ITEM MODAL
+  ════════════════════════════════════════ -->
+  <div class="modal-overlay" id="addBucketModal" role="dialog" aria-modal="true" aria-label="Plan ekle">
+    <div class="modal-box">
+      <button class="modal-close" id="closeBucketModal" type="button" aria-label="Kapat">&#10005;</button>
+      <h3 class="modal-title" id="bucketModalTitle">Plan Ekle</h3>
+      <form class="memory-form" id="bucketForm" novalidate>
+        <div class="form-field">
+          <label for="bucketPhoto">Fotoğraf (opsiyonel)</label>
+          <input type="file" id="bucketPhoto" accept="image/*" />
+        </div>
+        <div class="form-field">
+          <label for="bucketTitle">Ne yapmak istiyorsunuz?</label>
+          <input type="text" id="bucketTitle" placeholder="Paris'e git…" autocomplete="off" required />
+        </div>
+        <button type="submit" class="btn-save-memory">Kaydet</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       BUCKET → MEMORY CONFIRM MODAL
+  ════════════════════════════════════════ -->
+  <div class="modal-overlay" id="bucketConfirmModal" role="dialog" aria-modal="true" aria-label="Anıya ekle">
+    <div class="modal-box modal-box--sm">
+      <p class="confirm-text">Bunu anılar kısmına da eklemek ister misiniz?</p>
+      <div class="confirm-actions">
+        <button class="btn-confirm-yes" id="bucketConfirmYes" type="button">Evet, Ekle</button>
+        <button class="btn-confirm-no"  id="bucketConfirmNo"  type="button">Hayır</button>
+      </div>
+    </div>
+  </div>
 
   <!-- ═══════════════════════════════════════
        ADD MEMORY MODAL
@@ -169,6 +216,7 @@
 
   <!-- JS modules (order matters: modules before app.js) -->
   <script src="js/counter.js"></script>
+  <script src="js/bucket.js"></script>
   <script src="js/player.js"></script>
   <script src="js/memories.js"></script>
   <script src="js/quotes.js"></script>
