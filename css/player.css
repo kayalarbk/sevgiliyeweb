@@ -68,6 +68,10 @@ body.player-visible .player-toggle-btn {
   transform: translateY(100%);
 }
 
+body.player-visible {
+  padding-bottom: 148px;
+}
+
 /* ── Track selector row ── */
 .player-select-row {
   width: 100%;

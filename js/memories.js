@@ -455,6 +455,11 @@ const memories = (function () {
     });
   }
 
-  return { init, openWithData, deleteById, linkLocation };
+  function openEditById(id) {
+    const card = cards.find(c => c.id === id);
+    if (card) openEditModal(card);
+  }
+
+  return { init, openWithData, deleteById, linkLocation, openEditById };
 
 })();

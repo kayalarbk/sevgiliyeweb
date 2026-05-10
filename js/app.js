@@ -120,6 +120,7 @@
     player.init();
     bucket.init();
     memories.init();
+    timeline.init();
     quotes.init();
     mapModule.init();
     gamesModule.init();

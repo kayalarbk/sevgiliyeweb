@@ -4,6 +4,7 @@
  * Implements:
  *   • A game menu that switches to individual game views
  *   • Drag-and-drop (+ click-to-swap) photo puzzle
+ *   • Photo picker from PUZZLE_PHOTOS (js/photos.js) with random select
  *   • Confetti animation on completion
  *   • Secret note / video reveal modal
  *   • Puzzle settings (note + video URL) persisted in localStorage
@@ -12,14 +13,14 @@
  */
 const gamesModule = (function () {
 
-  const PUZZLE_SETTINGS_KEY  = 'love_puzzle_settings';
-  const CONFETTI_COUNT       = 130;
-  const CONFETTI_MIN_SIZE    = 6;
-  const CONFETTI_SIZE_RANGE  = 9;
-  const CONFETTI_MIN_DUR     = 2.5;
-  const CONFETTI_DUR_RANGE   = 2.5;
-  const CONFETTI_MAX_DELAY   = 2.5;
-  const SOLVED_DELAY_MS      = 700;
+  const PUZZLE_SETTINGS_KEY   = 'love_puzzle_settings';
+  const CONFETTI_COUNT        = 130;
+  const CONFETTI_MIN_SIZE     = 6;
+  const CONFETTI_SIZE_RANGE   = 9;
+  const CONFETTI_MIN_DUR      = 2.5;
+  const CONFETTI_DUR_RANGE    = 2.5;
+  const CONFETTI_MAX_DELAY    = 2.5;
+  const SOLVED_DELAY_MS       = 700;
   const TITLE_CLICK_THRESHOLD = 5;
   const TITLE_CLICK_TIMEOUT_MS = 2000;
 
@@ -33,13 +34,8 @@ const gamesModule = (function () {
 
   /* ── Puzzle settings ─────────────────────────────── */
 
-  function loadSettings() {
-    return storage.get(PUZZLE_SETTINGS_KEY, {});
-  }
-
-  function saveSettings(s) {
-    storage.set(PUZZLE_SETTINGS_KEY, s);
-  }
+  function loadSettings() { return storage.get(PUZZLE_SETTINGS_KEY, {}); }
+  function saveSettings(s) { storage.set(PUZZLE_SETTINGS_KEY, s); }
 
   /* ── Game menu / area toggle ─────────────────────── */
 
@@ -56,9 +52,47 @@ const gamesModule = (function () {
     if (gameId === 'puzzle') renderPuzzleUI(area);
   }
 
+  /* ── Photo picker helpers ────────────────────────── */
+
+  function hasPhotos() {
+    return typeof PUZZLE_PHOTOS !== 'undefined' && PUZZLE_PHOTOS.length > 0;
+  }
+
+  function pickRandomPhoto() {
+    if (!hasPhotos()) return;
+    const photo    = PUZZLE_PHOTOS[Math.floor(Math.random() * PUZZLE_PHOTOS.length)];
+    const url      = 'photos/' + photo.file;
+    const urlInput = document.getElementById('puzzleImageUrl');
+    const nameEl   = document.getElementById('puzzleSelectedName');
+    if (urlInput) urlInput.value = url;
+    if (nameEl)   nameEl.textContent = '✓ ' + photo.name;
+  }
+
+  function handleNewPhoto() {
+    if (!hasPhotos()) return;
+    const photo    = PUZZLE_PHOTOS[Math.floor(Math.random() * PUZZLE_PHOTOS.length)];
+    puzzleImageUrl = 'photos/' + photo.file;
+    buildPuzzle(puzzleImageUrl, puzzleGrid);
+  }
+
   /* ── Puzzle UI ───────────────────────────────────── */
 
   function renderPuzzleUI(container) {
+    const photosHtml = hasPhotos() ? `
+      <div class="puzzle-photo-picker">
+        <div class="puzzle-picker-row">
+          <span class="puzzle-picker-label">📸 Hazır Fotoğraflar</span>
+          <button class="puzzle-random-btn" id="puzzleRandomPhoto" type="button">🎲 Rastgele Seç</button>
+        </div>
+        <p class="puzzle-selected-name" id="puzzleSelectedName"></p>
+      </div>
+      <p class="puzzle-picker-or">— veya URL / dosya gir —</p>
+    ` : '';
+
+    const newPhotoBtn = hasPhotos()
+      ? `<button class="puzzle-random-btn puzzle-new-photo-btn" id="puzzleNewPhoto" type="button">🎲 Yeni Fotoğraf</button>`
+      : '';
+
     container.innerHTML = `
       <div class="puzzle-toolbar">
         <button class="puzzle-back-btn" id="puzzleBack" type="button">← Oyunlar</button>
@@ -66,6 +100,7 @@ const gamesModule = (function () {
         <span style="width:80px"></span>
       </div>
       <div class="puzzle-setup" id="puzzleSetup">
+        ${photosHtml}
         <div class="puzzle-url-row">
           <input type="url" id="puzzleImageUrl" class="puzzle-url-input"
                  placeholder="Fotoğraf URL'si girin…" />
@@ -88,6 +123,7 @@ const gamesModule = (function () {
         <div class="puzzle-grid" id="puzzleGrid"></div>
         <div class="puzzle-actions">
           <button class="puzzle-reset-btn" id="puzzleReset" type="button">🔀 Yeniden Karıştır</button>
+          ${newPhotoBtn}
         </div>
       </div>
     `;
@@ -98,7 +134,13 @@ const gamesModule = (function () {
       buildPuzzle(puzzleImageUrl, puzzleGrid);
     });
 
-    /* Secret settings access: 5 clicks on the title within 2 seconds */
+    if (hasPhotos()) {
+      document.getElementById('puzzleRandomPhoto').addEventListener('click', pickRandomPhoto);
+      const newBtn = document.getElementById('puzzleNewPhoto');
+      if (newBtn) newBtn.addEventListener('click', handleNewPhoto);
+    }
+
+    /* Secret settings: 5 clicks on title within 2 seconds */
     let titleClicks = 0;
     let titleTimer  = null;
     document.getElementById('puzzleTitle').addEventListener('click', () => {
@@ -118,6 +160,8 @@ const gamesModule = (function () {
       const reader = new FileReader();
       reader.onload = ev => {
         document.getElementById('puzzleImageUrl').value = ev.target.result;
+        const nameEl = document.getElementById('puzzleSelectedName');
+        if (nameEl) nameEl.textContent = '';
       };
       reader.readAsDataURL(file);
     });
@@ -126,7 +170,9 @@ const gamesModule = (function () {
   function handleStart() {
     const url = document.getElementById('puzzleImageUrl').value.trim();
     if (!url) {
-      alert('Lütfen bir fotoğraf URL\'si girin veya dosya seçin.');
+      alert(hasPhotos()
+        ? 'Lütfen bir fotoğraf seçin veya URL/dosya girin.'
+        : 'Lütfen bir fotoğraf URL\'si girin veya dosya seçin.');
       return;
     }
     const checked = document.querySelector('input[name="puzzleGrid"]:checked');
