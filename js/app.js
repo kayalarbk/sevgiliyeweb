@@ -28,17 +28,18 @@
 
     const reader = new FileReader();
     reader.onload = function (ev) {
-      const dataUrl = ev.target.result;
-      applyBg(dataUrl);
-      try {
-        localStorage.setItem(BG_KEY, dataUrl);
-      } catch (_) {
-        // Quota exceeded for background — still apply visually this session
-      }
+      // Compress background to max 1920px to save localStorage space
+      compressImage(ev.target.result, 1920, 0.80).then(function (dataUrl) {
+        applyBg(dataUrl);
+        try {
+          localStorage.setItem(BG_KEY, dataUrl);
+        } catch (_) {
+          // Quota exceeded — still apply visually this session
+        }
+      });
     };
     reader.readAsDataURL(file);
 
-    // Reset so the same file can be re-selected
     e.target.value = '';
   }
 

@@ -36,7 +36,7 @@ const bucket = (function () {
   function readFile(file) {
     return new Promise(resolve => {
       const reader = new FileReader();
-      reader.onload  = ev => resolve(ev.target.result);
+      reader.onload  = ev => compressImage(ev.target.result).then(resolve);
       reader.onerror = ()  => resolve(null);
       reader.readAsDataURL(file);
     });

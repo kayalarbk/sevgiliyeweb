@@ -57,7 +57,7 @@ const memories = (function () {
     return Promise.all(
       Array.from(files).map(f => new Promise(resolve => {
         const reader = new FileReader();
-        reader.onload  = ev => resolve(ev.target.result);
+        reader.onload  = ev => compressImage(ev.target.result).then(resolve);
         reader.onerror = ()  => resolve(null);
         reader.readAsDataURL(f);
       }))
