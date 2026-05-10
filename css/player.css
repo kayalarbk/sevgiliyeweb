@@ -35,15 +35,10 @@
 }
 
 body.player-visible .player-toggle-btn {
-  bottom: 148px; /* local mode bar height ~138px + buffer */
+  bottom: 148px;
 }
 
-/* Spotify embed is taller — push button up more */
-body.player-visible.spotify-embed-active .player-toggle-btn {
-  bottom: 228px;
-}
-
-/* ── Bar container (column layout: progress on top, controls below) ── */
+/* ── Bar container ── */
 .player-bar {
   position: fixed;
   bottom: 0;
@@ -73,6 +68,39 @@ body.player-visible.spotify-embed-active .player-toggle-btn {
   transform: translateY(100%);
 }
 
+/* ── Track selector row ── */
+.player-select-row {
+  width: 100%;
+}
+
+.player-track-select {
+  width: 100%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  color: var(--color-text);
+  padding: 6px 14px;
+  font-size: 0.8rem;
+  outline: none;
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+}
+
+.player-track-select:focus {
+  border-color: var(--color-primary);
+}
+
+.player-track-select option {
+  background: #1a0a14;
+  color: var(--color-text);
+}
+
 /* ── Progress / seek row ── */
 .player-progress-row {
   display: flex;
@@ -91,7 +119,6 @@ body.player-visible.spotify-embed-active .player-toggle-btn {
   font-variant-numeric: tabular-nums;
 }
 
-/* Seek bar (range input) */
 .player-progress {
   flex: 1;
   -webkit-appearance: none;
@@ -101,7 +128,6 @@ body.player-visible.spotify-embed-active .player-toggle-btn {
   background: var(--color-border);
   outline: none;
   cursor: pointer;
-  position: relative;
   transition: height var(--transition-fast);
 }
 
@@ -109,7 +135,6 @@ body.player-visible.spotify-embed-active .player-toggle-btn {
   height: 6px;
 }
 
-/* Thumb */
 .player-progress::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 14px;
@@ -134,7 +159,6 @@ body.player-visible.spotify-embed-active .player-toggle-btn {
   box-shadow: 0 0 10px rgba(233, 30, 140, 0.7);
 }
 
-/* Filled portion via background gradient — updated by JS on timeupdate */
 .player-progress::-webkit-slider-runnable-track {
   height: 4px;
   border-radius: var(--radius-pill);
@@ -170,7 +194,7 @@ body.player-visible.spotify-embed-active .player-toggle-btn {
   color: var(--color-primary-light);
 }
 
-/* ── Control buttons row ── */
+/* ── Control buttons ── */
 .player-controls {
   display: flex;
   align-items: center;
@@ -205,7 +229,6 @@ body.player-visible.spotify-embed-active .player-toggle-btn {
   transform: scale(0.95);
 }
 
-/* Play/pause button — larger & coloured */
 .player-btn-main {
   width: 46px;
   height: 46px;
@@ -221,7 +244,6 @@ body.player-visible.spotify-embed-active .player-toggle-btn {
   transform: scale(1.08);
 }
 
-/* Pulse ring while playing */
 .player-btn-main.playing {
   animation: player-pulse 2s ease-in-out infinite;
 }
@@ -231,148 +253,10 @@ body.player-visible.spotify-embed-active .player-toggle-btn {
   50%       { box-shadow: 0 0 0 10px rgba(233, 30, 140, 0);   }
 }
 
-/* ── Local panel wrapper ── */
-#playerLocalPanel {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-/* ── Mode switcher row ── */
-.player-mode-row {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-}
-
-.player-mode-btn {
-  padding: 4px 14px;
-  border-radius: var(--radius-pill);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  color: var(--color-text-muted);
-  font-size: 0.76rem;
-  cursor: pointer;
-  transition:
-    background var(--transition-fast),
-    color var(--transition-fast),
-    border-color var(--transition-fast);
-}
-
-.player-mode-btn.active {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-  color: #fff;
-}
-
-.player-mode-btn:not(.active):hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--color-text);
-}
-
-/* ── Spotify panel ── */
-.spotify-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.spotify-input-row {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.spotify-url-input {
-  flex: 1;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-pill);
-  color: var(--color-text);
-  padding: 7px 14px;
-  font-size: 0.82rem;
-  outline: none;
-  min-width: 0;
-  transition: border-color var(--transition-fast);
-}
-
-.spotify-url-input::placeholder {
-  color: var(--color-text-muted);
-  opacity: 0.7;
-}
-
-.spotify-url-input:focus {
-  border-color: var(--color-primary);
-}
-
-.spotify-embed-wrap {
-  position: relative;
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-.spotify-embed-wrap iframe {
-  display: block;
-  border-radius: 12px;
-}
-
-.spotify-change-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  padding: 4px 10px;
-  background: rgba(0, 0, 0, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: var(--radius-pill);
-  color: #fff;
-  font-size: 0.72rem;
-  cursor: pointer;
-  backdrop-filter: blur(8px);
-  transition: background var(--transition-fast), transform var(--transition-fast);
-}
-
-.spotify-change-btn:hover {
-  background: rgba(233, 30, 140, 0.7);
-  transform: scale(1.05);
-}
-
-/* ── Upload label ── */
-.player-upload {
-  flex-shrink: 0;
-}
-
-.player-upload-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 7px 15px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-pill);
-  font-size: 0.79rem;
-  color: var(--color-text-muted);
-  cursor: pointer;
-  white-space: nowrap;
-  transition:
-    background var(--transition-fast),
-    color var(--transition-fast),
-    transform var(--transition-fast);
-}
-
-.player-upload-label:hover {
-  background: rgba(255, 255, 255, 0.11);
-  color: var(--color-text);
-  transform: translateY(-1px);
-}
-
-/* ── Responsive: compact on small screens ── */
+/* ── Responsive ── */
 @media (max-width: 480px) {
   body.player-visible .player-toggle-btn {
     bottom: 156px;
-  }
-
-  body.player-visible.spotify-embed-active .player-toggle-btn {
-    bottom: 236px;
   }
 
   .player-bar {
@@ -382,14 +266,5 @@ body.player-visible.spotify-embed-active .player-toggle-btn {
 
   .player-main-row {
     gap: 8px;
-  }
-
-  .player-info {
-    max-width: 80px;
-  }
-
-  .player-upload-label {
-    font-size: 0.72rem;
-    padding: 6px 10px;
   }
 }
