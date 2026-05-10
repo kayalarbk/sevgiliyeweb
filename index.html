@@ -1,23 +1,24 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Our Love Story</title>
+  <title>Aşk Hikayemiz</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="css/main.css" />
   <link rel="stylesheet" href="css/counter.css" />
   <link rel="stylesheet" href="css/player.css" />
   <link rel="stylesheet" href="css/memories.css" />
   <link rel="stylesheet" href="css/bucket.css" />
   <link rel="stylesheet" href="css/quotes.css" />
-
+  <link rel="stylesheet" href="css/map.css" />
+  <link rel="stylesheet" href="css/games.css" />
 </head>
 <body>
 
-  <!-- Full-screen background overlay -->
   <div class="bg-overlay" id="bgOverlay"></div>
 
   <!-- ═══════════════════════════════════════
@@ -29,10 +30,12 @@
       <a class="nav-link" href="#counterSection">Ana Sayfa</a>
       <a class="nav-link" href="#memoriesSection">Anılar</a>
       <a class="nav-link" href="#bucketSection">Planlar</a>
-
+      <a class="nav-link" href="#mapSection">Harita</a>
+      <a class="nav-link" href="#gamesSection">Oyunlar</a>
     </nav>
     <div class="nav-actions">
-      <label for="bgUpload" class="bg-upload-label" title="Change background photo">&#128444;</label>
+      <button class="theme-toggle-btn" id="themeToggle" type="button" title="Tema değiştir" aria-label="Gece/gündüz modu">🌙</button>
+      <label for="bgUpload" class="bg-upload-label" title="Arkaplan fotoğrafını değiştir">&#128444;</label>
       <input type="file" id="bgUpload" accept="image/*" class="hidden-input" />
     </div>
   </header>
@@ -45,32 +48,30 @@
     <!-- ── COUNTER SECTION ── -->
     <section class="section-counter" id="counterSection">
       <header class="counter-header">
-        <h1 class="app-title">Our Love Story</h1>
-        <p class="app-subtitle">Every second with you is precious</p>
+        <h1 class="app-title">Aşk Hikayemiz</h1>
+        <p class="app-subtitle">Seninle geçen her an değerlidir</p>
       </header>
-
       <div class="counter-display" id="counterDisplay">
         <div class="counter-unit">
           <span class="counter-value" id="valueDays">0</span>
-          <span class="counter-label">Days</span>
+          <span class="counter-label">Gün</span>
         </div>
         <span class="counter-separator" aria-hidden="true">:</span>
         <div class="counter-unit">
           <span class="counter-value" id="valueHours">00</span>
-          <span class="counter-label">Hours</span>
+          <span class="counter-label">Saat</span>
         </div>
         <span class="counter-separator" aria-hidden="true">:</span>
         <div class="counter-unit">
           <span class="counter-value" id="valueMinutes">00</span>
-          <span class="counter-label">Minutes</span>
+          <span class="counter-label">Dakika</span>
         </div>
         <span class="counter-separator" aria-hidden="true">:</span>
         <div class="counter-unit">
           <span class="counter-value" id="valueSeconds">00</span>
-          <span class="counter-label">Seconds</span>
+          <span class="counter-label">Saniye</span>
         </div>
       </div>
-
     </section>
 
     <!-- ── MEMORIES SECTION ── -->
@@ -80,9 +81,7 @@
         <button class="btn-add-memory" id="btnAddMemory" type="button">+ Anı Ekle</button>
       </div>
       <div class="memories-scroll-container">
-        <div class="memories-track" id="memoriesTrack">
-          <!-- Memory cards injected by memories.js -->
-        </div>
+        <div class="memories-track" id="memoriesTrack"></div>
       </div>
     </section>
 
@@ -92,9 +91,34 @@
         <h2 class="section-title">Birlikte Yapacaklarımız</h2>
         <button class="btn-add-bucket" id="btnAddBucket" type="button">+ Ekle</button>
       </div>
-      <div class="bucket-grid" id="bucketGrid">
-        <!-- Cards injected by bucket.js -->
+      <div class="bucket-grid" id="bucketGrid"></div>
+    </section>
+
+    <!-- ── MAP SECTION ── -->
+    <section class="section-map" id="mapSection">
+      <div class="map-section-header">
+        <h2 class="section-title">Bize Özel Haritamız</h2>
+        <button class="btn-add-marker" id="btnAddMarker" type="button">+ Konum Ekle</button>
       </div>
+      <div class="map-pick-hint" id="mapPickHint">
+        📍 Haritada konum seçmek için tıklayın &nbsp;—&nbsp; <kbd>Esc</kbd> ile iptal
+      </div>
+      <div id="mainLeafletMap" class="main-leaflet-map"></div>
+    </section>
+
+    <!-- ── GAMES SECTION ── -->
+    <section class="section-games" id="gamesSection">
+      <div class="games-section-header">
+        <h2 class="section-title">Oyunlarımız</h2>
+      </div>
+      <div class="games-menu" id="gamesMenu">
+        <button class="game-card-btn" data-game="puzzle" type="button">
+          <span class="game-card-icon">🧩</span>
+          <span class="game-card-name">Fotoğraf Puzzle</span>
+          <span class="game-card-desc">Fotoğrafı parçalara böl ve birleştir!</span>
+        </button>
+      </div>
+      <div class="game-area" id="gameArea" style="display:none"></div>
     </section>
 
   </main>
@@ -149,24 +173,38 @@
   <!-- ═══════════════════════════════════════
        ADD MEMORY MODAL
   ════════════════════════════════════════ -->
-  <div class="modal-overlay" id="addMemoryModal" role="dialog" aria-modal="true" aria-label="Add a memory">
-    <div class="modal-box">
-      <button class="modal-close" id="closeAddMemory" type="button" aria-label="Close modal">&#10005;</button>
-      <h3 class="modal-title" id="modalTitle">Add a Memory</h3>
+  <div class="modal-overlay" id="addMemoryModal" role="dialog" aria-modal="true" aria-label="Anı ekle">
+    <div class="modal-box modal-box--scroll">
+      <button class="modal-close" id="closeAddMemory" type="button" aria-label="Kapat">&#10005;</button>
+      <h3 class="modal-title" id="modalTitle">Anı Ekle</h3>
       <form class="memory-form" id="memoryForm" novalidate>
         <div class="form-field">
-          <label for="memoryPhoto">Photos</label>
+          <label for="memoryPhoto">Fotoğraflar</label>
           <input type="file" id="memoryPhoto" accept="image/*" multiple />
         </div>
         <div class="form-field">
-          <label for="memoryTitle">Title</label>
-          <input type="text" id="memoryTitle" placeholder="Our first date&#8230;" autocomplete="off" required />
+          <label for="memoryTitle">Başlık</label>
+          <input type="text" id="memoryTitle" placeholder="İlk randevumuz…" autocomplete="off" required />
         </div>
         <div class="form-field">
-          <label for="memoryDate">Date</label>
+          <label for="memoryDate">Tarih</label>
           <input type="date" id="memoryDate" />
         </div>
-        <button type="submit" class="btn-save-memory">Save Memory</button>
+        <div class="form-field location-toggle-row">
+          <label class="location-toggle-label">
+            <input type="checkbox" id="memoryAddLocation" />
+            <span>📍 Haritaya konum ekle</span>
+          </label>
+        </div>
+        <div class="location-extra-fields" id="locationExtraFields">
+          <div class="form-field">
+            <label for="memoryLocationName">Konum Adı</label>
+            <input type="text" id="memoryLocationName" placeholder="İstanbul, Boğaz…" />
+          </div>
+          <div id="memoryMiniMap" class="memory-mini-map"></div>
+          <p class="map-click-hint">📌 Haritaya tıklayarak konum işaretleyin</p>
+        </div>
+        <button type="submit" class="btn-save-memory">Kaydet</button>
       </form>
     </div>
   </div>
@@ -174,10 +212,10 @@
   <!-- ═══════════════════════════════════════
        LIGHTBOX MODAL
   ════════════════════════════════════════ -->
-  <div class="lightbox-overlay" id="lightboxOverlay" role="dialog" aria-modal="true" aria-label="Memory detail">
-    <button class="lightbox-close" id="lightboxClose" type="button" aria-label="Close lightbox">&#10005;</button>
-    <button class="lightbox-nav lightbox-prev" id="lightboxPrev" type="button" aria-label="Previous photo">&#10094;</button>
-    <button class="lightbox-nav lightbox-next" id="lightboxNext" type="button" aria-label="Next photo">&#10095;</button>
+  <div class="lightbox-overlay" id="lightboxOverlay" role="dialog" aria-modal="true" aria-label="Anı detayı">
+    <button class="lightbox-close" id="lightboxClose" type="button" aria-label="Kapat">&#10005;</button>
+    <button class="lightbox-nav lightbox-prev" id="lightboxPrev" type="button" aria-label="Önceki fotoğraf">&#10094;</button>
+    <button class="lightbox-nav lightbox-next" id="lightboxNext" type="button" aria-label="Sonraki fotoğraf">&#10095;</button>
     <div class="lightbox-content" id="lightboxContent">
       <img class="lightbox-img" id="lightboxImg" src="" alt="" />
       <div class="lightbox-info">
@@ -189,46 +227,122 @@
   </div>
 
   <!-- ═══════════════════════════════════════
+       MAP → MEMORY CONFIRM MODAL
+  ════════════════════════════════════════ -->
+  <div class="modal-overlay" id="mapMemoryConfirmModal" role="dialog" aria-modal="true" aria-label="Anıya ekle">
+    <div class="modal-box modal-box--sm">
+      <p class="confirm-text">Bu konumu anılar kısmına da eklemek ister misiniz?</p>
+      <div class="confirm-actions">
+        <button class="btn-confirm-yes" id="mapMemoryConfirmYes" type="button">Evet, Ekle</button>
+        <button class="btn-confirm-no"  id="mapMemoryConfirmNo"  type="button">Hayır</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       ADD MAP MARKER MODAL
+  ════════════════════════════════════════ -->
+  <div class="modal-overlay" id="addMarkerModal" role="dialog" aria-modal="true" aria-label="Konum ekle">
+    <div class="modal-box">
+      <button class="modal-close" id="closeMarkerModal" type="button" aria-label="Kapat">&#10005;</button>
+      <h3 class="modal-title">Konum Ekle</h3>
+      <form class="memory-form" id="markerForm" novalidate>
+        <div class="form-field">
+          <label for="markerName">Konum Adı</label>
+          <input type="text" id="markerName" placeholder="İstanbul, Türkiye…" required />
+        </div>
+        <div class="form-field">
+          <label for="markerDate">Tarih</label>
+          <input type="date" id="markerDate" />
+        </div>
+        <div class="form-field">
+          <label for="markerPhoto">Fotoğraf (opsiyonel)</label>
+          <input type="file" id="markerPhoto" accept="image/*" />
+        </div>
+        <div class="form-field">
+          <label for="markerNote">Not</label>
+          <input type="text" id="markerNote" placeholder="Bu yer hakkında bir şeyler…" />
+        </div>
+        <p class="marker-coords-hint" id="markerCoordsHint">Henüz konum seçilmedi</p>
+        <button type="submit" class="btn-save-memory">Kaydet</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       PUZZLE SETTINGS MODAL
+  ════════════════════════════════════════ -->
+  <div class="modal-overlay" id="puzzleSettingsModal" role="dialog" aria-modal="true" aria-label="Puzzle ayarları">
+    <div class="modal-box">
+      <button class="modal-close" id="closePuzzleSettings" type="button" aria-label="Kapat">&#10005;</button>
+      <h3 class="modal-title">Puzzle Ayarları</h3>
+      <form class="memory-form" id="puzzleSettingsForm" novalidate>
+        <div class="form-field">
+          <label for="puzzleSecretNote">Gizli Not (puzzle tamamlanınca gösterilir)</label>
+          <textarea class="form-textarea" id="puzzleSecretNote" placeholder="Seni çok seviyorum…" rows="3"></textarea>
+        </div>
+        <div class="form-field">
+          <label for="puzzleSecretVideo">Gizli Video URL'si (opsiyonel)</label>
+          <input type="url" id="puzzleSecretVideo" placeholder="https://www.youtube.com/embed/…" />
+        </div>
+        <button type="submit" class="btn-save-memory">Kaydet</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       PUZZLE COMPLETE MODAL
+  ════════════════════════════════════════ -->
+  <div class="modal-overlay" id="puzzleCompleteModal" role="dialog" aria-modal="true" aria-label="Tebrikler">
+    <div class="modal-box puzzle-complete-box">
+      <button class="modal-close" id="closePuzzleComplete" type="button" aria-label="Kapat">&#10005;</button>
+      <div class="puzzle-complete-content">
+        <p class="puzzle-complete-emoji">🎉</p>
+        <h3 class="modal-title puzzle-complete-title">Tebrikler!</h3>
+        <p class="puzzle-complete-note" id="puzzleCompleteNote"></p>
+        <div class="puzzle-video-wrap" id="puzzleVideoWrap">
+          <iframe class="puzzle-video" id="puzzleVideoFrame" src="" frameborder="0" allowfullscreen></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
        QUOTES WIDGET (fixed bottom-right)
   ════════════════════════════════════════ -->
-  <button class="quotes-toggle-btn" id="btnToggleQuotes" type="button" aria-label="Romantic quotes">&#10084;</button>
-  <aside class="quotes-widget quotes-hidden" id="quotesWidget" aria-label="Romantic quote of the hour">
+  <button class="quotes-toggle-btn" id="btnToggleQuotes" type="button" aria-label="Romantik alıntılar">&#10084;</button>
+  <aside class="quotes-widget quotes-hidden" id="quotesWidget" aria-label="Romantik alıntı">
     <div class="quote-text-wrapper">
       <p class="quote-text" id="quoteText"></p>
     </div>
-    <button class="btn-next-quote" id="btnNextQuote" type="button" aria-label="Next quote">&#8594;</button>
+    <button class="btn-next-quote" id="btnNextQuote" type="button" aria-label="Sonraki alıntı">&#8594;</button>
   </aside>
 
   <!-- ═══════════════════════════════════════
        MUSIC PLAYER (fixed bottom bar)
   ════════════════════════════════════════ -->
-  <button class="player-toggle-btn" id="btnTogglePlayer" type="button" aria-label="Toggle music player">&#9835;</button>
-  <footer class="player-bar player-hidden" id="playerBar" role="region" aria-label="Music player">
-
-    <!-- Seek / progress bar row -->
+  <button class="player-toggle-btn" id="btnTogglePlayer" type="button" aria-label="Müzik çalara aç/kapat">&#9835;</button>
+  <footer class="player-bar player-hidden" id="playerBar" role="region" aria-label="Müzik çalar">
     <div class="player-progress-row">
       <span class="player-time" id="playerCurrentTime">0:00</span>
       <input type="range" class="player-progress" id="playerProgress"
-             min="0" max="100" value="0" step="0.1" aria-label="Seek" />
+             min="0" max="100" value="0" step="0.1" aria-label="İleri/geri sar" />
       <span class="player-time" id="playerDuration">0:00</span>
     </div>
-
-    <!-- Track info + controls + upload row -->
     <div class="player-main-row">
       <div class="player-info">
-        <span class="player-track-name" id="trackName">No track loaded</span>
+        <span class="player-track-name" id="trackName">Parça yüklenmedi</span>
       </div>
       <div class="player-controls">
-        <button class="player-btn" id="btnPrev"      type="button" aria-label="Previous track">&#9198;</button>
-        <button class="player-btn player-btn-main" id="btnPlayPause" type="button" aria-label="Play">&#9654;</button>
-        <button class="player-btn" id="btnNext"      type="button" aria-label="Next track">&#9197;</button>
+        <button class="player-btn" id="btnPrev"      type="button" aria-label="Önceki parça">&#9198;</button>
+        <button class="player-btn player-btn-main" id="btnPlayPause" type="button" aria-label="Oynat">&#9654;</button>
+        <button class="player-btn" id="btnNext"      type="button" aria-label="Sonraki parça">&#9197;</button>
       </div>
       <div class="player-upload">
-        <label for="audioUpload" class="player-upload-label" title="Upload music files">&#9835; Add Music</label>
+        <label for="audioUpload" class="player-upload-label" title="Müzik dosyası yükle">&#9835; Müzik Ekle</label>
         <input type="file" id="audioUpload" accept="audio/*" multiple class="hidden-input" />
       </div>
     </div>
-
     <audio id="audioElement" preload="metadata"></audio>
   </footer>
 
@@ -239,14 +353,16 @@
     <p class="app-footer-text">Barış Kaya ürünüdür &nbsp;•&nbsp; 15/08/2024'ten sonsuza kadar ♥</p>
   </footer>
 
-  <!-- JS modules (order matters: modules before app.js) -->
+  <!-- Scripts (order matters) -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="js/utils.js"></script>
   <script src="js/counter.js"></script>
   <script src="js/bucket.js"></script>
   <script src="js/player.js"></script>
   <script src="js/memories.js"></script>
   <script src="js/quotes.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/games.js"></script>
   <script src="js/app.js"></script>
-
 </body>
 </html>

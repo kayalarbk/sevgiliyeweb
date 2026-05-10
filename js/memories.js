@@ -1,12 +1,21 @@
+/**
+ * memories.js — Yatay kayan anı kartları, anı ekleme/düzenleme modali,
+ *               lightbox ve harita konum entegrasyonu.
+ */
 const memories = (function () {
 
   const STORAGE_KEY = 'love_memories';
   let cards      = [];
   let editingId  = null;
 
-  // Lightbox state
+  /* Lightbox state */
   let lbPhotos = [];
   let lbIndex  = 0;
+
+  /* Mini-map state (location in memory modal) */
+  let miniMap           = null;
+  let miniMapMarker     = null;
+  let pendingLocationCoords = null;
 
   /* ── Persistence ─────────────────────────────────── */
 
@@ -14,12 +23,12 @@ const memories = (function () {
     try {
       const raw    = localStorage.getItem(STORAGE_KEY);
       const parsed = raw ? JSON.parse(raw) : [];
-      // Migrate old single-photo format { photo: '...' } → { photos: [...] }
       cards = parsed.map(c => ({
-        id:     c.id,
-        title:  c.title,
-        date:   c.date,
-        photos: c.photos || (c.photo ? [c.photo] : []),
+        id:         c.id,
+        title:      c.title,
+        date:       c.date,
+        photos:     c.photos || (c.photo ? [c.photo] : []),
+        locationId: c.locationId || null,
       }));
     } catch (_) {
       cards = [];
@@ -40,7 +49,7 @@ const memories = (function () {
     if (!dateStr) return '';
     const d = new Date(dateStr + 'T00:00:00');
     if (isNaN(d.getTime())) return dateStr;
-    return d.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+    return d.toLocaleDateString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric' });
   }
 
   function escapeHtml(str) {
@@ -71,7 +80,7 @@ const memories = (function () {
     el.className  = 'memory-card';
     el.dataset.id = card.id;
     el.setAttribute('tabindex', '0');
-    el.setAttribute('aria-label', card.title || 'Memory');
+    el.setAttribute('aria-label', card.title || 'Anı');
 
     const firstPhoto = card.photos.length ? card.photos[0] : '';
     const photoHtml  = firstPhoto
@@ -82,10 +91,15 @@ const memories = (function () {
       ? `<span class="memory-photo-count">📷 ${card.photos.length}</span>`
       : '';
 
+    const locBadge = card.locationId
+      ? `<span class="memory-location-badge" title="Haritada konumu var">📍</span>`
+      : '';
+
     el.innerHTML = `
       <div class="memory-card-img-wrap">
         ${photoHtml}
         ${countBadge}
+        ${locBadge}
         <div class="memory-card-actions">
           <button class="memory-action-btn btn-edit-card"   title="Düzenle" type="button">✏️</button>
           <button class="memory-action-btn btn-delete-card" title="Sil"     type="button">🗑️</button>
@@ -138,16 +152,24 @@ const memories = (function () {
 
   function deleteCard(id) {
     if (!confirm('Bu anıyı silmek istediğine emin misin?')) return;
+    removeLinkedLocation(id);
     cards = cards.filter(c => c.id !== id);
     saveCards();
     renderCards();
   }
 
-  // Silent delete called by bucket.js (no confirm dialog)
   function deleteById(id) {
+    removeLinkedLocation(id);
     cards = cards.filter(c => c.id !== id);
     saveCards();
     renderCards();
+  }
+
+  function removeLinkedLocation(cardId) {
+    const card = cards.find(c => c.id === cardId);
+    if (card && card.locationId && typeof mapModule !== 'undefined') {
+      try { mapModule.deleteLocation(card.locationId); } catch (_) {}
+    }
   }
 
   /* ── Lightbox ────────────────────────────────────── */
@@ -204,10 +226,44 @@ const memories = (function () {
     document.body.style.overflow = '';
   }
 
+  /* ── Mini-map (location in memory modal) ─────────── */
+
+  function initMiniMap() {
+    if (typeof L === 'undefined') return;
+    if (miniMap) {
+      setTimeout(() => miniMap.invalidateSize(), 80);
+      return;
+    }
+    miniMap = L.map('memoryMiniMap', {
+      center: [39.9334, 32.8597],
+      zoom: 5
+    });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap'
+    }).addTo(miniMap);
+
+    miniMap.on('click', function (e) {
+      pendingLocationCoords = { lat: e.latlng.lat, lng: e.latlng.lng };
+      if (miniMapMarker) {
+        miniMapMarker.setLatLng(e.latlng);
+      } else {
+        miniMapMarker = L.marker(e.latlng).addTo(miniMap);
+      }
+    });
+  }
+
+  function resetMiniMap() {
+    if (miniMapMarker) {
+      miniMapMarker.remove();
+      miniMapMarker = null;
+    }
+    pendingLocationCoords = null;
+  }
+
   /* ── Add / Edit modal ────────────────────────────── */
 
   let pendingPhoto    = null;
-  let onSavedCallback = null;  // called with new memory id after save
+  let onSavedCallback = null;
 
   function openAddModal() {
     editingId       = null;
@@ -215,18 +271,19 @@ const memories = (function () {
     onSavedCallback = null;
     document.getElementById('modalTitle').textContent = 'Anı Ekle';
     document.getElementById('memoryForm').reset();
+    hideLocationFields();
     document.getElementById('addMemoryModal').classList.add('open');
     document.body.style.overflow = 'hidden';
     document.getElementById('memoryTitle').focus();
   }
 
-  // Called by bucket.js; onSaved(newMemoryId) fires after user saves
   function openWithData(title, onSaved) {
     editingId       = null;
     pendingPhoto    = null;
     onSavedCallback = onSaved || null;
     document.getElementById('modalTitle').textContent = 'Anı Ekle';
     document.getElementById('memoryForm').reset();
+    hideLocationFields();
     document.getElementById('memoryTitle').value = title || '';
     document.getElementById('addMemoryModal').classList.add('open');
     document.body.style.overflow = 'hidden';
@@ -235,10 +292,11 @@ const memories = (function () {
 
   function openEditModal(card) {
     editingId = card.id;
-    document.getElementById('modalTitle').textContent = 'Anıyı Düzenle';
+    document.getElementById('modalTitle').textContent   = 'Anıyı Düzenle';
     document.getElementById('memoryTitle').value = card.title || '';
     document.getElementById('memoryDate').value  = card.date  || '';
     document.getElementById('memoryPhoto').value = '';
+    hideLocationFields();
     document.getElementById('addMemoryModal').classList.add('open');
     document.body.style.overflow = 'hidden';
     document.getElementById('memoryTitle').focus();
@@ -247,18 +305,30 @@ const memories = (function () {
   function closeAddModal() {
     document.getElementById('addMemoryModal').classList.remove('open');
     document.getElementById('memoryForm').reset();
+    hideLocationFields();
+    resetMiniMap();
     document.body.style.overflow = '';
     editingId       = null;
     pendingPhoto    = null;
     onSavedCallback = null;
   }
 
+  function hideLocationFields() {
+    const fields = document.getElementById('locationExtraFields');
+    if (fields) fields.classList.remove('visible');
+    const cb = document.getElementById('memoryAddLocation');
+    if (cb) cb.checked = false;
+  }
+
   function handleFormSubmit(e) {
     e.preventDefault();
 
-    const title     = document.getElementById('memoryTitle').value.trim();
-    const dateVal   = document.getElementById('memoryDate').value;
-    const fileInput = document.getElementById('memoryPhoto');
+    const title       = document.getElementById('memoryTitle').value.trim();
+    const dateVal     = document.getElementById('memoryDate').value;
+    const fileInput   = document.getElementById('memoryPhoto');
+    const addLoc      = document.getElementById('memoryAddLocation').checked;
+    const locName     = document.getElementById('memoryLocationName').value.trim();
+    const locCoords   = pendingLocationCoords ? { ...pendingLocationCoords } : null;
 
     if (!title) { document.getElementById('memoryTitle').focus(); return; }
 
@@ -277,13 +347,32 @@ const memories = (function () {
         renderCards();
         closeAddModal();
       } else {
-        const newId = Date.now();
-        cards.unshift({ id: newId, title, date: dateVal, photos: newPhotos });
+        const newId  = Date.now();
+        const newCard = { id: newId, title, date: dateVal, photos: newPhotos, locationId: null };
+        cards.unshift(newCard);
         saveCards();
         renderCards();
+
+        /* Add linked map location if requested */
+        if (addLoc && locCoords && typeof mapModule !== 'undefined') {
+          try {
+            const locId = mapModule.addLocation({
+              id:       Date.now() + 1,
+              name:     locName || title,
+              lat:      locCoords.lat,
+              lng:      locCoords.lng,
+              date:     dateVal,
+              note:     '',
+              memoryId: newId
+            });
+            cards = cards.map(c => c.id === newId ? { ...c, locationId: locId } : c);
+            saveCards();
+          } catch (_) {}
+        }
+
         const cb = onSavedCallback;
-        closeAddModal();          // clears onSavedCallback
-        if (cb) cb(newId);        // notify bucket.js with new memory id
+        closeAddModal();
+        if (cb) cb(newId);
       }
     };
 
@@ -311,6 +400,22 @@ const memories = (function () {
     document.getElementById('lightboxPrev').addEventListener('click', lbPrev);
     document.getElementById('lightboxNext').addEventListener('click', lbNext);
 
+    /* Location checkbox */
+    const locCheckbox = document.getElementById('memoryAddLocation');
+    const locFields   = document.getElementById('locationExtraFields');
+    if (locCheckbox && locFields) {
+      locCheckbox.addEventListener('change', function () {
+        if (this.checked) {
+          locFields.classList.add('visible');
+          setTimeout(initMiniMap, 60);
+        } else {
+          locFields.classList.remove('visible');
+          resetMiniMap();
+        }
+      });
+    }
+
+    /* Overlay / keyboard */
     const lbOverlay  = document.getElementById('lightboxOverlay');
     const addOverlay = document.getElementById('addMemoryModal');
     lbOverlay.addEventListener('click',  e => { if (e.target === lbOverlay)  closeLightbox();  });
@@ -323,6 +428,13 @@ const memories = (function () {
     });
   }
 
-  return { init, openWithData, deleteById };
+  /* Called by map.js after memory is saved for a location */
+  function linkLocation(memoryId, locationId) {
+    cards = cards.map(c => c.id === memoryId ? { ...c, locationId } : c);
+    saveCards();
+    renderCards();
+  }
+
+  return { init, openWithData, deleteById, linkLocation };
 
 })();

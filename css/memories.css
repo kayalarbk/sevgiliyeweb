@@ -131,6 +131,19 @@
   pointer-events: none;
 }
 
+/* ── Location badge ── */
+.memory-location-badge {
+  position: absolute;
+  bottom: 7px;
+  right: 8px;
+  font-size: 0.82rem;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: var(--radius-pill);
+  padding: 2px 6px;
+  pointer-events: none;
+  line-height: 1.4;
+}
+
 /* ── Edit / delete action buttons ── */
 .memory-card-actions {
   position: absolute;
@@ -288,7 +301,8 @@
 }
 
 .form-field input[type="text"],
-.form-field input[type="date"] {
+.form-field input[type="date"],
+.form-field input[type="url"] {
   padding: 10px 15px;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid var(--color-border);
@@ -301,7 +315,8 @@
 }
 
 .form-field input[type="text"]:focus,
-.form-field input[type="date"]:focus {
+.form-field input[type="date"]:focus,
+.form-field input[type="url"]:focus {
   border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(233, 30, 140, 0.2);
 }
