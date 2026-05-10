@@ -6,6 +6,5 @@
  *   2. Aşağıdaki diziye { name: "Görünen Ad", file: "dosya-adi.mp3" } satırı ekle
  */
 const MUSIC_TRACKS = [
-  // Örnek:
-  // { name: "Bizim Şarkımız", file: "bizim-sarki.mp3" },
-];
+    { name: "Neyse - Siyah Esved", file: "Neyse-Siyah-Esved.mp3" },
+  ];
