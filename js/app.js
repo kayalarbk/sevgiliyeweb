@@ -105,6 +105,28 @@
     // Start ambient floating hearts
     startFloatingHearts();
 
+    // Active nav link highlight on scroll
+    const sections  = [
+      document.getElementById('counterSection'),
+      document.getElementById('memoriesSection'),
+    ];
+    const navLinks  = document.querySelectorAll('.nav-link');
+    const navHeight = 56;
+
+    function updateActiveLink() {
+      const scrollY = window.scrollY + navHeight + 16;
+      let active = sections[0];
+      sections.forEach(sec => {
+        if (sec && sec.offsetTop <= scrollY) active = sec;
+      });
+      navLinks.forEach(link => {
+        link.classList.toggle('active', link.getAttribute('href') === '#' + (active && active.id));
+      });
+    }
+
+    window.addEventListener('scroll', updateActiveLink, { passive: true });
+    updateActiveLink();
+
   });
 
 })();

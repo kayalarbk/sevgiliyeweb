@@ -48,6 +48,7 @@
   --z-content:  1;
   --z-player:   100;
   --z-quotes:   110;
+  --z-nav:      120;
   --z-modal:    200;
   --z-lightbox: 210;
 }
@@ -63,6 +64,11 @@ html {
   font-size: 16px;
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
+  scrollbar-width: none;
+}
+
+html::-webkit-scrollbar {
+  display: none;
 }
 
 body {
@@ -74,8 +80,8 @@ body {
   background-attachment: fixed;
   min-height: 100vh;
   overflow-x: hidden;
-  /* reserve space for fixed player bar (progress row + controls row) */
-  padding-bottom: 108px;
+  padding-top: 56px;    /* fixed nav header */
+  padding-bottom: 108px; /* fixed player bar */
 }
 
 img {
@@ -108,25 +114,68 @@ h1, h2, h3 {
   pointer-events: none;
 }
 
-/* ── Background upload control ── */
-.bg-upload-control {
+/* ── Nav header ── */
+.app-nav {
   position: fixed;
-  top: 16px;
-  right: 16px;
-  z-index: calc(var(--z-content) + 10);
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--z-nav);
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  background: rgba(16, 5, 13, 0.85);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.nav-brand {
+  font-family: var(--font-main);
+  font-size: 0.95rem;
+  color: var(--color-primary-light);
+  text-decoration: none;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.nav-links {
+  display: flex;
+  gap: 4px;
+}
+
+.nav-link {
+  padding: 6px 16px;
+  border-radius: var(--radius-pill);
+  font-size: 0.84rem;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  transition: color var(--transition-fast), background var(--transition-fast);
+}
+
+.nav-link:hover,
+.nav-link.active {
+  color: var(--color-text);
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
 }
 
 .bg-upload-label {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: var(--radius-pill);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  backdrop-filter: blur(10px);
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   cursor: pointer;
   transition: background var(--transition-fast), transform var(--transition-fast);
 }
@@ -195,5 +244,15 @@ h1, h2, h3 {
   }
   .app-wrapper {
     padding: 0 12px;
+  }
+  .app-nav {
+    padding: 0 12px;
+  }
+  .nav-brand {
+    font-size: 0.82rem;
+  }
+  .nav-link {
+    padding: 5px 10px;
+    font-size: 0.78rem;
   }
 }

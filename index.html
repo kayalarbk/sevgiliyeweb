@@ -15,11 +15,20 @@
   <!-- Full-screen background overlay -->
   <div class="bg-overlay" id="bgOverlay"></div>
 
-  <!-- Background image changer (top-right corner) -->
-  <div class="bg-upload-control">
-    <label for="bgUpload" class="bg-upload-label" title="Change background photo">&#128444;</label>
-    <input type="file" id="bgUpload" accept="image/*" class="hidden-input" />
-  </div>
+  <!-- ═══════════════════════════════════════
+       NAV HEADER
+  ════════════════════════════════════════ -->
+  <header class="app-nav" id="appNav">
+    <a class="nav-brand" href="#counterSection">Our Love Story</a>
+    <nav class="nav-links">
+      <a class="nav-link" href="#counterSection">Ana Sayfa</a>
+      <a class="nav-link" href="#memoriesSection">Anılar</a>
+    </nav>
+    <div class="nav-actions">
+      <label for="bgUpload" class="bg-upload-label" title="Change background photo">&#128444;</label>
+      <input type="file" id="bgUpload" accept="image/*" class="hidden-input" />
+    </div>
+  </header>
 
   <!-- ═══════════════════════════════════════
        MAIN CONTENT
