@@ -213,9 +213,9 @@ const memories = (function () {
   }
 
   // Called by bucket.js when user confirms adding a done item to memories
-  function openWithData(title, photoDataUrl) {
+  function openWithData(title) {
     editingId    = null;
-    pendingPhoto = photoDataUrl || null;
+    pendingPhoto = null;
     document.getElementById('modalTitle').textContent = 'Anı Ekle';
     document.getElementById('memoryForm').reset();
     document.getElementById('memoryTitle').value = title || '';

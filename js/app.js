@@ -109,8 +109,8 @@
     // Active nav link highlight on scroll
     const sections  = [
       document.getElementById('counterSection'),
-      document.getElementById('bucketSection'),
       document.getElementById('memoriesSection'),
+      document.getElementById('bucketSection'),
     ];
     const navLinks  = document.querySelectorAll('.nav-link');
     const navHeight = 56;

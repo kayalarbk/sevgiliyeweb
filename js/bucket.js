@@ -195,11 +195,11 @@ const bucket = (function () {
   }
 
   function handleConfirmYes() {
+    const id = pendingDoneId;   // id'yi kapat öncesi sakla
     closeConfirmModal();
-    if (pendingDoneId === null) return;
-    const item = items.find(it => it.id === pendingDoneId);
-    if (item) memories.openWithData(item.title, item.photo);
-    pendingDoneId = null;
+    if (id === null) return;
+    const item = items.find(it => it.id === id);
+    if (item) memories.openWithData(item.title);  // fotoğrafı kullanıcı ekler
   }
 
   /* ── Init ────────────────────────────────────────── */
