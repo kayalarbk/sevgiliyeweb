@@ -1,41 +1,113 @@
 /**
  * player.js — Ambient music player for the love app.
  *
- * Supports uploading multiple audio files (no server required — uses
- * Object URLs created from File objects), play/pause toggle, previous/next
- * track navigation, and automatic advance to the next track on song end.
+ * Two modes:
+ *   • Local — Upload audio files from device (Object URL, no base64)
+ *   • Spotify — Paste a Spotify link; rendered as an embed iframe
  *
- * Public API:  player.init()
+ * Mode and Spotify URL are persisted in localStorage.
+ * Public API: player.init()
  */
 const player = (function () {
 
+  const SPOTIFY_KEY      = 'love_spotify_url';
+  const PLAYER_MODE_KEY  = 'love_player_mode';
+
   /* ── State ───────────────────────────────────────── */
 
-  let tracks     = [];   // [{ name: string, url: string }]
+  let tracks     = [];
   let currentIdx = 0;
   let isPlaying  = false;
+  let playerMode = 'local';
 
   /* ── DOM references (populated in init) ─────────── */
   let audioEl, trackNameEl, btnPlayPause, btnPrev, btnNext;
   let progressEl, currentTimeEl, durationEl;
 
-  /* ── Internal helpers ────────────────────────────── */
+  /* ── Spotify URL parsing ─────────────────────────── */
 
-  /**
-   * Loads a track at the given (possibly out-of-bounds) index.
-   * Wraps around the playlist using modulo arithmetic.
-   * @param {number}  idx       - Raw index (will be normalised).
-   * @param {boolean} autoPlay  - If true, begins playback after loading.
-   */
+  function parseSpotifyUrl(input) {
+    const str = String(input || '').trim();
+    /* https://open.spotify.com/track/ID or spotify:track:ID */
+    let m = str.match(/open\.spotify\.com\/(track|playlist|album|artist)\/([A-Za-z0-9]+)/);
+    if (m) return `https://open.spotify.com/embed/${m[1]}/${m[2]}?utm_source=generator`;
+    m = str.match(/^spotify:(track|playlist|album|artist):([A-Za-z0-9]+)$/);
+    if (m) return `https://open.spotify.com/embed/${m[1]}/${m[2]}?utm_source=generator`;
+    return null;
+  }
+
+  /* ── Spotify panel states ────────────────────────── */
+
+  function setSpotifyEmbed(embedUrl) {
+    document.getElementById('spotifyFrame').src      = embedUrl;
+    document.getElementById('spotifyEmbedWrap').style.display = '';
+    document.getElementById('spotifyInputRow').style.display  = 'none';
+    document.body.classList.add('spotify-embed-active');
+  }
+
+  function showSpotifyInput() {
+    document.getElementById('spotifyFrame').src      = '';
+    document.getElementById('spotifyEmbedWrap').style.display = 'none';
+    document.getElementById('spotifyInputRow').style.display  = '';
+    document.body.classList.remove('spotify-embed-active');
+  }
+
+  function handleSpotifySave() {
+    const input    = document.getElementById('spotifyUrlInput');
+    const embedUrl = parseSpotifyUrl(input.value);
+    if (!embedUrl) {
+      alert('Geçerli bir Spotify linki değil. Parça, playlist veya albüm linki girin.');
+      return;
+    }
+    storage.setRaw(SPOTIFY_KEY, embedUrl);
+    setSpotifyEmbed(embedUrl);
+  }
+
+  function handleSpotifyChange() {
+    storage.remove(SPOTIFY_KEY);
+    document.getElementById('spotifyUrlInput').value = '';
+    showSpotifyInput();
+  }
+
+  /* ── Mode switching ──────────────────────────────── */
+
+  function switchMode(mode) {
+    playerMode = mode;
+    const localPanel   = document.getElementById('playerLocalPanel');
+    const spotifyPanel = document.getElementById('playerSpotifyPanel');
+    const localBtn     = document.getElementById('playerModeLocal');
+    const spotifyBtn   = document.getElementById('playerModeSpotify');
+
+    if (mode === 'spotify') {
+      localPanel.style.display   = 'none';
+      spotifyPanel.style.display = '';
+      localBtn.classList.remove('active');
+      spotifyBtn.classList.add('active');
+      storage.setRaw(PLAYER_MODE_KEY, 'spotify');
+
+      const savedEmbed = storage.getRaw(SPOTIFY_KEY);
+      if (savedEmbed) {
+        setSpotifyEmbed(savedEmbed);
+      } else {
+        showSpotifyInput();
+      }
+    } else {
+      localPanel.style.display   = '';
+      spotifyPanel.style.display = 'none';
+      localBtn.classList.add('active');
+      spotifyBtn.classList.remove('active');
+      storage.setRaw(PLAYER_MODE_KEY, 'local');
+      document.body.classList.remove('spotify-embed-active');
+    }
+  }
+
+  /* ── Local player helpers ────────────────────────── */
+
   function loadTrack(idx, autoPlay) {
     if (!tracks.length) return;
-
-    // Wrap safely in both directions
     currentIdx = ((idx % tracks.length) + tracks.length) % tracks.length;
-
     audioEl.src = tracks[currentIdx].url;
     trackNameEl.textContent = tracks[currentIdx].name;
-
     if (autoPlay) {
       startPlayback();
     } else {
@@ -43,17 +115,12 @@ const player = (function () {
     }
   }
 
-  /** Calls audio.play() and updates UI to "playing" state. */
   function startPlayback() {
     audioEl.play()
       .then(() => setPlayingUI(true))
-      .catch(() => {
-        // Autoplay blocked by browser — update state without throwing
-        setPlayingUI(false);
-      });
+      .catch(() => setPlayingUI(false));
   }
 
-  /** Syncs button icon / CSS classes to the current playing state. */
   function setPlayingUI(playing) {
     isPlaying = playing;
     btnPlayPause.textContent = playing ? '⏸' : '▶';
@@ -61,12 +128,8 @@ const player = (function () {
     trackNameEl.classList.toggle('playing', playing);
   }
 
-  /* ── Controls ────────────────────────────────────── */
-
-  /** Toggles between play and pause. */
   function togglePlayPause() {
     if (!tracks.length) return;
-
     if (isPlaying) {
       audioEl.pause();
       setPlayingUI(false);
@@ -75,43 +138,28 @@ const player = (function () {
     }
   }
 
-  /** Jumps to the previous track, maintaining current play state. */
-  function prevTrack() {
-    loadTrack(currentIdx - 1, isPlaying);
-  }
-
-  /** Jumps to the next track, maintaining current play state. */
-  function nextTrack() {
-    loadTrack(currentIdx + 1, isPlaying);
-  }
+  function prevTrack() { loadTrack(currentIdx - 1, isPlaying); }
+  function nextTrack() { loadTrack(currentIdx + 1, isPlaying); }
 
   /* ── Progress bar ────────────────────────────────── */
 
-  /** Converts a duration in seconds to an "m:ss" display string. */
   function formatTime(secs) {
     if (!isFinite(secs) || secs < 0) return '0:00';
-    const m = Math.floor(secs / 60);
-    const s = Math.floor(secs % 60);
-    return m + ':' + String(s).padStart(2, '0');
+    return Math.floor(secs / 60) + ':' + String(Math.floor(secs % 60)).padStart(2, '0');
   }
 
-  /** Syncs the progress bar and current-time label to audio.currentTime. */
   function updateProgress() {
     if (!audioEl.duration) return;
-    const pct = (audioEl.currentTime / audioEl.duration) * 100;
-    progressEl.value = pct;
+    progressEl.value = (audioEl.currentTime / audioEl.duration) * 100;
     currentTimeEl.textContent = formatTime(audioEl.currentTime);
   }
 
-  /** Called when audio metadata loads — sets the max and shows total duration. */
   function handleMetadata() {
-    progressEl.max = 100;
-    durationEl.textContent = formatTime(audioEl.duration);
+    durationEl.textContent    = formatTime(audioEl.duration);
     currentTimeEl.textContent = '0:00';
-    progressEl.value = 0;
+    progressEl.value          = 0;
   }
 
-  /** Seeks audio to the position chosen via the range slider. */
   function handleSeek() {
     if (!audioEl.duration) return;
     audioEl.currentTime = (progressEl.value / 100) * audioEl.duration;
@@ -119,59 +167,56 @@ const player = (function () {
 
   /* ── Upload handler ──────────────────────────────── */
 
-  /**
-   * Processes files from the <input type="file" multiple>.
-   * Creates Object URLs (efficient, in-memory, no base64 overhead) and
-   * strips the file extension from the display name.
-   *
-   * Note: Object URLs are tied to the page session and are revoked when the
-   * tab closes, which is the desired behaviour for in-browser playback.
-   */
   function handleUpload(e) {
-    const files = Array.from(e.target.files);
-    if (!files.length) return;
-
+    const files   = Array.from(e.target.files);
     const wasEmpty = tracks.length === 0;
-
     files.forEach(file => {
       tracks.push({
-        name: file.name.replace(/\.[^/.]+$/, ''),  // strip extension
+        name: file.name.replace(/\.[^/.]+$/, ''),
         url:  URL.createObjectURL(file),
       });
     });
-
-    // Auto-load the first track of the new batch if playlist was empty
-    if (wasEmpty) loadTrack(0, false);
-
-    // Reset input so the same file list can be re-selected later
+    if (wasEmpty && tracks.length) loadTrack(0, false);
     e.target.value = '';
   }
 
-  /* ── Public init ─────────────────────────────────── */
+  /* ── Init ────────────────────────────────────────── */
 
-  /**
-   * Binds all event listeners and caches DOM references.
-   * Must be called after the DOM is ready.
-   */
   function init() {
-    audioEl        = document.getElementById('audioElement');
-    trackNameEl    = document.getElementById('trackName');
-    btnPlayPause   = document.getElementById('btnPlayPause');
-    btnPrev        = document.getElementById('btnPrev');
-    btnNext        = document.getElementById('btnNext');
-    progressEl     = document.getElementById('playerProgress');
-    currentTimeEl  = document.getElementById('playerCurrentTime');
-    durationEl     = document.getElementById('playerDuration');
-    const upload   = document.getElementById('audioUpload');
+    audioEl       = document.getElementById('audioElement');
+    trackNameEl   = document.getElementById('trackName');
+    btnPlayPause  = document.getElementById('btnPlayPause');
+    btnPrev       = document.getElementById('btnPrev');
+    btnNext       = document.getElementById('btnNext');
+    progressEl    = document.getElementById('playerProgress');
+    currentTimeEl = document.getElementById('playerCurrentTime');
+    durationEl    = document.getElementById('playerDuration');
+    const upload  = document.getElementById('audioUpload');
 
     if (!audioEl) return;
 
+    /* Local player controls */
     btnPlayPause.addEventListener('click', togglePlayPause);
     btnPrev.addEventListener('click', prevTrack);
     btnNext.addEventListener('click', nextTrack);
     upload.addEventListener('change', handleUpload);
+    audioEl.addEventListener('timeupdate',     updateProgress);
+    audioEl.addEventListener('loadedmetadata', handleMetadata);
+    progressEl.addEventListener('input',       handleSeek);
+    audioEl.addEventListener('ended',          nextTrack);
 
-    // Toggle player bar visibility
+    /* Mode switcher */
+    document.getElementById('playerModeLocal').addEventListener('click',   () => switchMode('local'));
+    document.getElementById('playerModeSpotify').addEventListener('click', () => switchMode('spotify'));
+
+    /* Spotify controls */
+    document.getElementById('spotifySaveBtn').addEventListener('click',   handleSpotifySave);
+    document.getElementById('spotifyChangeBtn').addEventListener('click', handleSpotifyChange);
+    document.getElementById('spotifyUrlInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') handleSpotifySave();
+    });
+
+    /* Player bar toggle */
     const toggleBtn = document.getElementById('btnTogglePlayer');
     const playerBar = document.getElementById('playerBar');
     if (toggleBtn && playerBar) {
@@ -181,13 +226,9 @@ const player = (function () {
       });
     }
 
-    // Progress bar events
-    audioEl.addEventListener('timeupdate',    updateProgress);
-    audioEl.addEventListener('loadedmetadata', handleMetadata);
-    progressEl.addEventListener('input',      handleSeek);
-
-    // Auto-advance when a track reaches its natural end
-    audioEl.addEventListener('ended', nextTrack);
+    /* Restore persisted mode */
+    const savedMode = storage.getRaw(PLAYER_MODE_KEY) || 'local';
+    switchMode(savedMode);
   }
 
   return { init };
