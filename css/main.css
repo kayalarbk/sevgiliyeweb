@@ -165,7 +165,7 @@ h1, h2, h3 { line-height: 1.2; }
   bottom: 0;
   z-index: var(--z-bg);
   background-size: cover;
-  background-position: center center;
+  background-position: center top;
   background-repeat: no-repeat;
   pointer-events: none;
 }
