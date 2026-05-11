@@ -123,8 +123,6 @@
     timeline.init();
     quotes.init();
     mapModule.init();
-    gamesModule.init();
-
     /* Kayan kalpler */
     startFloatingHearts();
 
@@ -134,7 +132,6 @@
       document.getElementById('memoriesSection'),
       document.getElementById('bucketSection'),
       document.getElementById('mapSection'),
-      document.getElementById('gamesSection'),
     ].filter(Boolean);
 
     const navLinks = document.querySelectorAll('.nav-link');

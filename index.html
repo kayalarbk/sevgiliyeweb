@@ -15,8 +15,7 @@
   <link rel="stylesheet" href="css/bucket.css" />
   <link rel="stylesheet" href="css/quotes.css" />
   <link rel="stylesheet" href="css/map.css" />
-  <link rel="stylesheet" href="css/games.css" />
-  <link rel="stylesheet" href="css/auth.css" />
+<link rel="stylesheet" href="css/auth.css" />
   <link rel="stylesheet" href="css/timeline.css" />
 </head>
 <body>
@@ -61,7 +60,6 @@
       <a class="nav-link" href="#memoriesSection">Anılar</a>
       <a class="nav-link" href="#bucketSection">Planlar</a>
       <a class="nav-link" href="#mapSection">Harita</a>
-      <a class="nav-link" href="#gamesSection">Oyunlar</a>
     </nav>
     <div class="nav-actions">
       <span class="nav-username" id="navUsername"></span>
@@ -139,21 +137,6 @@
         📍 Haritada konum seçmek için tıklayın &nbsp;—&nbsp; <kbd>Esc</kbd> ile iptal
       </div>
       <div id="mainLeafletMap" class="main-leaflet-map"></div>
-    </section>
-
-    <!-- ── GAMES SECTION ── -->
-    <section class="section-games" id="gamesSection">
-      <div class="games-section-header">
-        <h2 class="section-title">Oyunlarımız</h2>
-      </div>
-      <div class="games-menu" id="gamesMenu">
-        <button class="game-card-btn" data-game="puzzle" type="button">
-          <span class="game-card-icon">🧩</span>
-          <span class="game-card-name">Fotoğraf Puzzle</span>
-          <span class="game-card-desc">Fotoğrafı parçalara böl ve birleştir!</span>
-        </button>
-      </div>
-      <div class="game-area" id="gameArea" style="display:none"></div>
     </section>
 
   </main>
@@ -305,44 +288,6 @@
   </div>
 
   <!-- ═══════════════════════════════════════
-       PUZZLE SETTINGS MODAL
-  ════════════════════════════════════════ -->
-  <div class="modal-overlay" id="puzzleSettingsModal" role="dialog" aria-modal="true" aria-label="Puzzle ayarları">
-    <div class="modal-box">
-      <button class="modal-close" id="closePuzzleSettings" type="button" aria-label="Kapat">&#10005;</button>
-      <h3 class="modal-title">Puzzle Ayarları</h3>
-      <form class="memory-form" id="puzzleSettingsForm" novalidate>
-        <div class="form-field">
-          <label for="puzzleSecretNote">Gizli Not (puzzle tamamlanınca gösterilir)</label>
-          <textarea class="form-textarea" id="puzzleSecretNote" placeholder="Seni çok seviyorum…" rows="3"></textarea>
-        </div>
-        <div class="form-field">
-          <label for="puzzleSecretVideo">Gizli Video URL'si (opsiyonel)</label>
-          <input type="url" id="puzzleSecretVideo" placeholder="https://www.youtube.com/embed/…" />
-        </div>
-        <button type="submit" class="btn-save-memory">Kaydet</button>
-      </form>
-    </div>
-  </div>
-
-  <!-- ═══════════════════════════════════════
-       PUZZLE COMPLETE MODAL
-  ════════════════════════════════════════ -->
-  <div class="modal-overlay" id="puzzleCompleteModal" role="dialog" aria-modal="true" aria-label="Tebrikler">
-    <div class="modal-box puzzle-complete-box">
-      <button class="modal-close" id="closePuzzleComplete" type="button" aria-label="Kapat">&#10005;</button>
-      <div class="puzzle-complete-content">
-        <p class="puzzle-complete-emoji">🎉</p>
-        <h3 class="modal-title puzzle-complete-title">Tebrikler!</h3>
-        <p class="puzzle-complete-note" id="puzzleCompleteNote"></p>
-        <div class="puzzle-video-wrap" id="puzzleVideoWrap">
-          <iframe class="puzzle-video" id="puzzleVideoFrame" src="" frameborder="0" allowfullscreen></iframe>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ═══════════════════════════════════════
        QUOTES WIDGET (fixed bottom-right)
   ════════════════════════════════════════ -->
   <button class="quotes-toggle-btn" id="btnToggleQuotes" type="button" aria-label="Romantik alıntılar">&#10084;</button>
@@ -420,9 +365,7 @@
   <script src="js/memories.js"></script>
   <script src="js/quotes.js"></script>
   <script src="js/map.js"></script>
-  <script src="js/games.js"></script>
-  <script src="js/photos.js"></script>
-  <script src="js/timeline.js"></script>
+<script src="js/timeline.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
