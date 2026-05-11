@@ -127,7 +127,6 @@ body.day-mode .app-footer-text { color: rgba(61,15,37,0.5); }
 html {
   font-size: 16px;
   scroll-behavior: smooth;
-  scroll-padding-top: 64px;
   -webkit-text-size-adjust: 100%;
   scrollbar-width: none;
 }
@@ -160,7 +159,10 @@ h1, h2, h3 { line-height: 1.2; }
 /* ── Background photo (en alt katman) ── */
 .bg-photo {
   position: fixed;
-  inset: 0;
+  top: 56px;
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: var(--z-bg);
   background-size: cover;
   background-position: center center;
