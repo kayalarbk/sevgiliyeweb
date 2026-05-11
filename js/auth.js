@@ -57,7 +57,10 @@ const auth = (function () {
     const username = usernameInput.value.trim();
     const password = passwordInput.value;
 
-    const match = USERS.find(u => u.username === username && u.password === password);
+    const normalize = s => s.toLowerCase().replace(/\s+/g, '');
+    const match = USERS.find(u =>
+      normalize(u.username) === normalize(username) && u.password === password
+    );
 
     if (!match) {
       if (!username) {

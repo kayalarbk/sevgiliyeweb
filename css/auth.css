@@ -24,7 +24,7 @@
 .login-card {
   width: 100%;
   max-width: 400px;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.11);
   border: 1px solid rgba(233, 30, 140, 0.28);
   border-radius: var(--radius-lg);
   padding: 48px 38px;
@@ -72,7 +72,7 @@
 
 .login-subtitle {
   font-size: 0.82rem;
-  color: var(--color-text-muted);
+  color: rgba(255, 245, 249, 0.80);
   margin-bottom: 36px;
   letter-spacing: 0.03em;
 }
@@ -92,8 +92,8 @@
 }
 
 .login-label {
-  font-size: 0.74rem;
-  color: var(--color-text-muted);
+  font-size: 0.76rem;
+  color: rgba(255, 245, 249, 0.85);
   letter-spacing: 0.07em;
   text-transform: uppercase;
 }
@@ -119,7 +119,7 @@
 
 .login-input::placeholder {
   color: var(--color-text-muted);
-  opacity: 0.45;
+  opacity: 0.65;
 }
 
 /* ── Error message ── */
