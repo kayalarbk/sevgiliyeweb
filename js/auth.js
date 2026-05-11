@@ -8,10 +8,7 @@ const auth = (function () {
 
   const SESSION_KEY = 'love_session';
 
-  const USERS = [
-    { username: 'Derin Beyza Günal', password: 'dbk150824' },
-    { username: 'Barış Kaya',        password: 'bk150824'  },
-  ];
+  const USERS = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.users) ? APP_CONFIG.users : [];
 
   /* ── Session ──────────────────────────────────────── */
 
