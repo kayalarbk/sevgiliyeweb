@@ -64,7 +64,7 @@
 .login-title {
   font-family: var(--font-main);
   font-size: 1.85rem;
-  color: var(--color-text);
+  color: #fff5f9;
   margin-bottom: 8px;
   letter-spacing: 0.04em;
   line-height: 1.2;
@@ -99,10 +99,10 @@
 }
 
 .login-input {
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid var(--color-border);
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: var(--radius-sm);
-  color: var(--color-text);
+  color: #fff5f9;
   padding: 12px 16px;
   font-size: 0.93rem;
   font-family: inherit;
@@ -206,6 +206,21 @@
   font-style: italic;
   letter-spacing: 0.02em;
   margin-top: 3px;
+}
+
+/* ── Day-mode overrides: overlay her zaman koyu, metin hep açık ── */
+body.day-mode .login-title,
+body.day-mode .login-subtitle,
+body.day-mode .login-label,
+body.day-mode .login-input {
+  color: #fff5f9;
+}
+body.day-mode .login-input {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+body.day-mode .login-input::placeholder {
+  color: rgba(255, 245, 249, 0.65);
 }
 
 /* ── Responsive ── */
