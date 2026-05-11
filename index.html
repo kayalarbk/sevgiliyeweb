@@ -37,9 +37,17 @@
         </div>
         <div class="login-field">
           <label class="login-label" for="loginPassword">Şifre</label>
-          <input class="login-input" type="password" id="loginPassword"
-                 name="password" autocomplete="current-password"
-                 placeholder="••••••••" />
+          <div class="login-password-wrap">
+            <input class="login-input" type="password" id="loginPassword"
+                   name="password" autocomplete="current-password"
+                   placeholder="••••••••" />
+            <button class="login-eye-btn" id="togglePassword" type="button" aria-label="Şifreyi göster/gizle">
+              <svg class="eye-icon" id="eyeIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
         </div>
         <p class="login-error" id="loginError" hidden></p>
         <button class="login-btn" type="submit">Giriş Yap ♥</button>

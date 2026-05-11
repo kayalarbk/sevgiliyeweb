@@ -122,6 +122,37 @@
   opacity: 0.65;
 }
 
+/* ── Password wrapper + eye button ── */
+.login-password-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.login-password-wrap .login-input {
+  flex: 1;
+  padding-right: 46px;
+}
+.login-eye-btn {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: rgba(255, 245, 249, 0.55);
+  display: flex;
+  align-items: center;
+  transition: color var(--transition-fast);
+}
+.login-eye-btn:hover {
+  color: rgba(255, 245, 249, 0.95);
+}
+.eye-icon {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
 /* ── Error message ── */
 .login-error {
   background: rgba(233, 30, 140, 0.10);
