@@ -6,7 +6,8 @@
       "Bash(git push *)",
       "Bash(node -e ' *)",
       "Bash(Start-Process *)",
-      "PowerShell(Start-Process \"C:\\\\Users\\\\baris\\\\Desktop\\\\love-app\\\\index.html\")"
+      "PowerShell(Start-Process \"C:\\\\Users\\\\baris\\\\Desktop\\\\love-app\\\\index.html\")",
+      "Bash(git *)"
     ]
   }
 }
