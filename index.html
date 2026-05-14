@@ -17,6 +17,7 @@
   <link rel="stylesheet" href="css/map.css" />
 <link rel="stylesheet" href="css/auth.css" />
   <link rel="stylesheet" href="css/timeline.css" />
+  <link rel="stylesheet" href="css/announcements.css" />
 </head>
 <body>
 
@@ -72,6 +73,9 @@
     <div class="nav-actions">
       <span class="nav-username" id="navUsername"></span>
       <button class="logout-btn" id="btnLogout" type="button" title="Çıkış Yap">Çıkış</button>
+      <button class="nav-announcements-btn" id="btnAnnouncements" type="button" title="Duyurular" aria-label="Duyurular">
+        🔔 <span class="announcements-badge" id="announcementsBadge" hidden>0</span>
+      </button>
       <button class="theme-toggle-btn" id="themeToggle" type="button" title="Tema değiştir" aria-label="Gece/gündüz modu">🌙</button>
       <label for="bgUpload" class="bg-upload-label" title="Arkaplan fotoğrafını değiştir">&#128444;</label>
       <input type="file" id="bgUpload" accept="image/*" class="hidden-input" />
@@ -348,6 +352,28 @@
   </footer>
 
   <!-- ═══════════════════════════════════════
+       ANNOUNCEMENTS OVERLAY
+  ════════════════════════════════════════ -->
+  <div class="announcements-overlay" id="announcementsOverlay" role="dialog" aria-modal="true" aria-label="Duyurular">
+    <div class="announcements-header">
+      <span class="announcements-header-icon">🔔</span>
+      <h2 class="announcements-header-title">Duyurular</h2>
+      <button class="announcements-close" id="btnCloseAnnouncements" type="button" aria-label="Kapat">✕</button>
+    </div>
+    <div class="announcements-body" id="announcementsBody">
+      <div class="announcements-content" id="announcementsContent"></div>
+    </div>
+    <div class="announcements-add-section" id="announcementsAddSection" hidden>
+      <button class="announcements-add-toggle" id="btnShowAddAnnouncement" type="button">+ Duyuru Ekle</button>
+      <div class="announcements-add-form" id="announcementsAddForm" hidden>
+        <input class="announcements-add-input" type="text" id="announcementTitleInput" placeholder="Başlık" autocomplete="off" />
+        <textarea class="announcements-add-textarea" id="announcementBodyInput" placeholder="Duyuru metni…"></textarea>
+        <button class="announcements-add-save" id="btnSaveAnnouncement" type="button">Kaydet</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
        TIMELINE OVERLAY
   ════════════════════════════════════════ -->
   <div class="tl-overlay" id="timelineOverlay" role="dialog" aria-modal="true" aria-label="Zaman Tüneli">
@@ -373,6 +399,7 @@
   <script src="js/memories.js"></script>
   <script src="js/quotes.js"></script>
   <script src="js/map.js"></script>
+<script src="js/announcements.js"></script>
 <script src="js/timeline.js"></script>
   <script src="js/app.js"></script>
 </body>

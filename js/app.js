@@ -121,6 +121,7 @@
     bucket.init();
     memories.init();
     timeline.init();
+    announcements.init();
     quotes.init();
     mapModule.init();
     /* Kayan kalpler */
