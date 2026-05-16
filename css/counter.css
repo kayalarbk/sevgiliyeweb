@@ -27,7 +27,7 @@
   font-weight: 700;
   color: var(--color-text);
   letter-spacing: 0.02em;
-  text-shadow: 0 2px 24px rgba(233, 30, 140, 0.45);
+  text-shadow: var(--text-shadow-readable), 0 2px 24px rgba(233, 30, 140, 0.45);
 }
 
 .app-subtitle {
@@ -35,6 +35,7 @@
   color: var(--color-text-muted);
   font-style: italic;
   letter-spacing: 0.07em;
+  text-shadow: var(--text-shadow-readable);
 }
 
 /* ── Digit display row ── */

@@ -9,6 +9,11 @@
   position: relative;
 }
 
+/* ── Section title ── */
+.section-title {
+  text-shadow: var(--text-shadow-readable);
+}
+
 /* ── Header row ── */
 .map-section-header {
   display: flex;
