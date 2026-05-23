@@ -7,7 +7,15 @@
       "Bash(node -e ' *)",
       "Bash(Start-Process *)",
       "PowerShell(Start-Process \"C:\\\\Users\\\\baris\\\\Desktop\\\\love-app\\\\index.html\")",
-      "Bash(git *)"
+      "Bash(git *)",
+      "Bash(npx vercel *)",
+      "Bash(npx playwright *)",
+      "Bash(node -e \"require\\('playwright'\\)\")",
+      "Bash(npx --yes playwright --version)",
+      "Bash(npm list *)",
+      "Bash(npm root *)",
+      "Bash(ls \"$\\(npm root -g\\)/playwright\")",
+      "Bash(node -e \"require.resolve\\('playwright'\\)\")"
     ]
   }
 }
