@@ -220,6 +220,6 @@ body.day-mode .leaflet-control-attribution {
 
 /* ── Responsive ── */
 @media (max-width: 600px) {
-  .main-leaflet-map { height: 320px; }
+  .main-leaflet-map { height: 260px; }
   .section-map { padding: 56px 0 48px; }
 }

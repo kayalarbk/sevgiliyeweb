@@ -144,12 +144,29 @@
   box-shadow: 0 0 0 3px rgba(233, 30, 140, 0.22);
 }
 
-/* ── Mobile: hide colons to save space ── */
-@media (max-width: 420px) {
+/* ── Mobile: 4 kart tek satırda ── */
+@media (max-width: 600px) {
   .counter-separator {
     display: none;
   }
+
   .counter-display {
-    gap: 10px;
+    gap: 8px;
+    flex-wrap: nowrap;
+  }
+
+  .counter-unit {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 6px;
+  }
+
+  .counter-value {
+    font-size: clamp(1.4rem, 5vw, 2rem);
+  }
+
+  .counter-label {
+    font-size: 0.55rem;
+    margin-top: 4px;
   }
 }

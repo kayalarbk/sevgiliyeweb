@@ -459,3 +459,34 @@
   margin-top: 4px;
   letter-spacing: 0.06em;
 }
+
+/* ── Mobile ── */
+@media (max-width: 600px) {
+  .memory-card {
+    width: clamp(150px, 42vw, 180px);
+  }
+
+  /* Bottom-sheet modal */
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .modal-box {
+    width: 100%;
+    max-width: 100%;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    padding: 24px 20px 32px;
+    max-height: 90vh;
+    overflow-y: auto;
+    transform: translateY(100%);
+  }
+
+  .modal-overlay.open .modal-box {
+    transform: translateY(0) scale(1);
+  }
+
+  .modal-box--scroll {
+    max-height: 85vh;
+  }
+}

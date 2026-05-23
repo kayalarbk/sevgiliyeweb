@@ -258,17 +258,39 @@ body.player-visible {
 }
 
 /* ── Responsive ── */
-@media (max-width: 480px) {
-  body.player-visible .player-toggle-btn {
-    bottom: 156px;
+@media (max-width: 600px) {
+  .player-bar {
+    padding: 8px 14px 10px;
+    gap: 4px;
   }
 
-  .player-bar {
-    padding: 8px 12px 10px;
-    gap: 5px;
+  /* Track seçici gizle — yer kazanır */
+  .player-select-row {
+    display: none;
+  }
+
+  .player-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 0.82rem;
+  }
+
+  .player-btn-main {
+    width: 40px;
+    height: 40px;
+    font-size: 0.95rem;
   }
 
   .player-main-row {
     gap: 8px;
+  }
+
+  .player-track-name {
+    font-size: 0.75rem;
+  }
+
+  .player-time {
+    font-size: 0.65rem;
+    min-width: 26px;
   }
 }

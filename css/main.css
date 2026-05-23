@@ -538,7 +538,7 @@ h1, h2, h3 { line-height: 1.2; }
   }
 
   body.player-visible .player-toggle-btn {
-    bottom: calc(56px + 148px) !important; /* 204px */
+    bottom: calc(56px + 80px + 16px) !important; /* 152px — compact player */
   }
 
   /* Body padding-bottom: tab bar + içerik boşluğu */
@@ -547,7 +547,7 @@ h1, h2, h3 { line-height: 1.2; }
   }
 
   body.player-visible {
-    padding-bottom: calc(56px + 148px) !important; /* 204px */
+    padding-bottom: calc(56px + 80px) !important; /* 136px — compact player */
   }
 
   /* ── Day mode overrides ── */
