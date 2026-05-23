@@ -157,16 +157,16 @@
 
   .counter-unit {
     flex: 1;
-    min-width: 0;
-    padding: 10px 6px;
+    min-width: 68px;
+    padding: 10px 8px;
   }
 
   .counter-value {
-    font-size: clamp(1.4rem, 5vw, 2rem);
+    font-size: clamp(1.6rem, 6vw, 2.2rem);
   }
 
   .counter-label {
-    font-size: 0.55rem;
+    font-size: 0.62rem;
     margin-top: 4px;
   }
 }

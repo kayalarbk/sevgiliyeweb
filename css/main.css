@@ -529,25 +529,25 @@ h1, h2, h3 { line-height: 1.2; }
      player.css'den sonra yüklenen main.css için !important
      gereklidir (aynı özgüllük, ama cascade sırası nedeniyle). */
   .player-bar {
-    bottom: 56px !important;
+    bottom: 60px !important;
   }
 
   /* Player toggle butonu: tab bar'ın üstünde */
   body > .player-toggle-btn {
-    bottom: calc(56px + 16px); /* özgüllük: 0-1-1 > player.css 0-1-0 */
+    bottom: 76px;
   }
 
   body.player-visible .player-toggle-btn {
-    bottom: calc(56px + 80px + 16px) !important; /* 152px — compact player */
+    bottom: 224px !important;
   }
 
   /* Body padding-bottom: tab bar + içerik boşluğu */
   body {
-    padding-bottom: 124px; /* 56px tab + toggle btn clearance */
+    padding-bottom: 160px;
   }
 
   body.player-visible {
-    padding-bottom: calc(56px + 80px) !important; /* 136px — compact player */
+    padding-bottom: calc(60px + 148px) !important; /* 208px */
   }
 
   /* ── Day mode overrides ── */
