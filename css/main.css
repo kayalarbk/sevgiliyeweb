@@ -436,13 +436,137 @@ h1, h2, h3 { line-height: 1.2; }
   font-style: italic;
 }
 
-/* ── Responsive ── */
+/* ── Responsive (desktop küçültme) ── */
 @media (max-width: 600px) {
-  body { font-size: 14px; }
-  .app-wrapper { padding: 0 12px; }
-  .app-nav { padding: 0 10px; }
-  .nav-brand { font-size: 0.82rem; }
-  .nav-link { padding: 5px 8px; font-size: 0.74rem; }
+  body          { font-size: 14px; }
+  .app-wrapper  { padding: 0 12px; }
+  .app-nav      { padding: 0 10px; }
+  .nav-brand    { font-size: 0.82rem; }
   .theme-toggle-btn { width: 32px; height: 32px; font-size: 0.9rem; }
   .bg-upload-label  { width: 32px; height: 32px; }
+}
+
+/* ════════════════════════════════════════════════════
+   Mobile Tab Bar
+   ─────────────────────────────────────────────────
+   CSS Spec: backdrop-filter bir containing block oluşturur
+   ve altındaki position:fixed öğeleri viewport yerine
+   bu elemana göre konumlandırır.
+   Çözüm: mobilde .app-nav'dan backdrop-filter kaldırılır →
+   .nav-links artık viewport'a göre fixed konumlanabilir.
+════════════════════════════════════════════════════ */
+
+@media (max-width: 600px) {
+
+  /* app-nav: backdrop-filter kaldır (tab-bar triki için),
+     saydamlığı opak arka planla telafi et */
+  .app-nav {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgba(12, 4, 10, 0.97);
+  }
+
+  /* nav-links: header'dan çıkar, altta sabit tab bar'a dönüştür */
+  .nav-links {
+    position: fixed;
+    top: auto;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 56px;
+    z-index: var(--z-nav);
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: stretch;
+    gap: 0;
+    padding: 0;
+    background: rgba(12, 4, 10, 0.95);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-top: 1px solid var(--color-border);
+  }
+
+  /* Tab item */
+  .nav-link {
+    flex: 1;
+    padding: 5px 4px 4px;
+    border-radius: 0;
+    font-size: 0.60rem;
+    letter-spacing: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    color: var(--color-text-muted);
+    transition: color var(--transition-fast), background var(--transition-fast);
+  }
+
+  .nav-link:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--color-text);
+  }
+
+  .nav-link.active {
+    color: var(--color-primary-light);
+    background: rgba(233, 30, 140, 0.11);
+    box-shadow: inset 0 2px 0 var(--color-primary); /* üst çizgi göstergesi */
+  }
+
+  /* Emoji ikonlar — HTML değişikliği gerekmez */
+  .nav-link::before {
+    font-size: 1.2rem;
+    line-height: 1;
+    display: block;
+  }
+
+  .nav-link[href="#counterSection"]::before  { content: "❤️"; }
+  .nav-link[href="#memoriesSection"]::before { content: "📷"; }
+  .nav-link[href="#bucketSection"]::before   { content: "⭐"; }
+  .nav-link[href="#mapSection"]::before      { content: "📍"; }
+
+  /* ── Player bar: tab bar'ın üstüne çık ──────────────
+     player.css'den sonra yüklenen main.css için !important
+     gereklidir (aynı özgüllük, ama cascade sırası nedeniyle). */
+  .player-bar {
+    bottom: 56px !important;
+  }
+
+  /* Player toggle butonu: tab bar'ın üstünde */
+  body > .player-toggle-btn {
+    bottom: calc(56px + 16px); /* özgüllük: 0-1-1 > player.css 0-1-0 */
+  }
+
+  body.player-visible .player-toggle-btn {
+    bottom: calc(56px + 148px) !important; /* 204px */
+  }
+
+  /* Body padding-bottom: tab bar + içerik boşluğu */
+  body {
+    padding-bottom: 124px; /* 56px tab + toggle btn clearance */
+  }
+
+  body.player-visible {
+    padding-bottom: calc(56px + 148px) !important; /* 204px */
+  }
+
+  /* ── Day mode overrides ── */
+  body.day-mode .app-nav {
+    background: rgba(254, 235, 244, 0.97);
+  }
+
+  body.day-mode .nav-links {
+    background: rgba(254, 235, 244, 0.96);
+    border-top-color: rgba(233, 30, 140, 0.20);
+  }
+
+  body.day-mode .nav-link:hover {
+    background: rgba(233, 30, 140, 0.07);
+    color: #3d0f25;
+  }
+
+  body.day-mode .nav-link.active {
+    color: var(--color-primary);
+    background: rgba(233, 30, 140, 0.10);
+  }
 }
