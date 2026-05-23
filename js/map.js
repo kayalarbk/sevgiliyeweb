@@ -1,9 +1,8 @@
 /**
  * map.js — "Bize Özel Haritamız" section
  *
- * Manages an interactive Leaflet map where the couple can pin
- * locations they've visited or want to visit together.
- * Locations are persisted in localStorage.
+ * Manages an interactive Leaflet map where the couple can pin locations.
+ * Locations are persisted in Supabase (app_settings key: love_map_locations).
  *
  * Public API: mapModule.init()
  *             mapModule.addLocation(data)  → id
@@ -34,16 +33,20 @@ const mapModule = (function () {
   let pendingLatlng  = null;
   let lastAddedLoc   = null;
 
+  /* Realtime çift-render koruması */
+  let _lastSaveMs = 0;
+  const REALTIME_GRACE = 3000;
+
   /* ── Persistence ─────────────────────────────────── */
 
-  function load() {
-    locations = storage.get(STORAGE_KEY, []);
+  async function load() {
+    locations = await storage.get(STORAGE_KEY, []);
   }
 
-  function save() {
-    if (!storage.set(STORAGE_KEY, locations)) {
-      alert('Depolama alanı dolmak üzere.');
-    }
+  async function save() {
+    _lastSaveMs = Date.now();
+    const ok = await storage.set(STORAGE_KEY, locations);
+    if (!ok) alert('Konum kaydedilemedi.');
   }
 
   /* ── Heart icon ──────────────────────────────────── */
@@ -199,19 +202,19 @@ const mapModule = (function () {
     const latlng    = { ...pendingLatlng };
     const submitBtn = e.target.querySelector('button[type="submit"]');
 
-    const persist = (photoDataUrl) => {
+    const persist = async (photoUrl) => {
       const loc = {
         id:       Date.now(),
         name,
         lat:      latlng.lat,
         lng:      latlng.lng,
         date,
-        photoUrl: photoDataUrl || '',
+        photoUrl: photoUrl || '',
         note,
         memoryId: null
       };
       lastAddedLoc = loc;
-      addLocationInternal(loc);
+      await addLocationInternal(loc);
       setButtonLoading(submitBtn, false);
       closeMarkerModal();
       openMapMemoryConfirm();
@@ -221,7 +224,9 @@ const mapModule = (function () {
       setButtonLoading(submitBtn, true);
       const reader = new FileReader();
       reader.onload = ev => {
-        compressImage(ev.target.result, PHOTO_COMPRESS_PX, PHOTO_COMPRESS_Q).then(persist);
+        compressImage(ev.target.result, PHOTO_COMPRESS_PX, PHOTO_COMPRESS_Q)
+          .then(dataUrl => uploadPhoto(dataUrl))
+          .then(persist);
       };
       reader.readAsDataURL(fileInput.files[0]);
     } else {
@@ -241,18 +246,18 @@ const mapModule = (function () {
     document.body.style.overflow = '';
   }
 
-  function handleMapMemoryConfirmYes() {
+  async function handleMapMemoryConfirmYes() {
     const loc = lastAddedLoc;
     lastAddedLoc = null;
     closeMapMemoryConfirm();
     if (!loc) return;
 
-    memories.openWithData(loc.name, function (newMemoryId) {
-      memories.linkLocation(newMemoryId, loc.id);
+    memories.openWithData(loc.name, async function (newMemoryId) {
+      await memories.linkLocation(newMemoryId, loc.id);
       locations = locations.map(l =>
         l.id === loc.id ? { ...l, memoryId: newMemoryId } : l
       );
-      save();
+      await save();
     });
   }
 
@@ -263,23 +268,23 @@ const mapModule = (function () {
 
   /* ── Location CRUD ───────────────────────────────── */
 
-  function addLocationInternal(loc) {
+  async function addLocationInternal(loc) {
     locations.push(loc);
-    save();
+    await save();
     addMarkerToMap(loc);
   }
 
-  function addLocation(data) {
+  async function addLocation(data) {
     const id  = data.id || Date.now();
     const loc = { ...data, id };
-    addLocationInternal(loc);
+    await addLocationInternal(loc);
     if (map) map.setView([loc.lat, loc.lng], Math.max(map.getZoom(), MIN_VIEW_ZOOM));
     return id;
   }
 
-  function deleteLocation(id) {
+  async function deleteLocation(id) {
     locations = locations.filter(l => l.id !== id);
-    save();
+    await save();
     if (leafletMarkers[id] && map) {
       map.closePopup();
       map.removeLayer(leafletMarkers[id]);
@@ -287,13 +292,29 @@ const mapModule = (function () {
     }
   }
 
+  /* ── Realtime ────────────────────────────────────── */
+
+  function subscribeRealtime() {
+    supabaseClient.channel('map-locations-realtime')
+      .on('postgres_changes', {
+        event: '*', schema: 'public', table: 'app_settings',
+        filter: 'key=eq.' + STORAGE_KEY
+      }, async () => {
+        if (Date.now() - _lastSaveMs < REALTIME_GRACE) return;
+        await load();
+        renderMarkers();
+      })
+      .subscribe();
+  }
+
   /* ── Init ────────────────────────────────────────── */
 
-  function init() {
+  async function init() {
     if (!document.getElementById('mainLeafletMap')) return;
 
-    load();
+    await load();
     initMap();
+    subscribeRealtime();
 
     document.getElementById('btnAddMarker').addEventListener('click', () => {
       if (isPickingMode) { exitPickingMode(); return; }

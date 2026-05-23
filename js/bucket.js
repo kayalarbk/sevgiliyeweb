@@ -1,7 +1,7 @@
 /**
  * bucket.js — "Birlikte Yapacaklarımız" listesi.
  *
- * escapeHtml, storage → utils.js'deki global yardımcılar.
+ * escapeHtml, storage, uploadPhoto → utils.js'deki global yardımcılar.
  */
 const bucket = (function () {
 
@@ -11,27 +11,33 @@ const bucket = (function () {
   let pendingDoneId   = null;
   let pendingUncheckId = null;
 
+  /* Realtime çift-render koruması */
+  let _lastSaveMs = 0;
+  const REALTIME_GRACE = 3000;
+
   /* ── Persistence ─────────────────────────────────── */
 
-  function load() {
-    items = storage.get(STORAGE_KEY, []);
+  async function load() {
+    items = await storage.get(STORAGE_KEY, []);
   }
 
-  function save() {
-    if (!storage.set(STORAGE_KEY, items)) {
-      alert('Depolama alanı dolmak üzere.');
-    }
+  async function save() {
+    _lastSaveMs = Date.now();
+    const ok = await storage.set(STORAGE_KEY, items);
+    if (!ok) alert('Kayıt başarısız. Lütfen tekrar dene.');
   }
 
-  /* ── Dosya okuma ─────────────────────────────────── */
+  /* ── Dosya okuma + Storage upload ─────────────────── */
 
-  function readFile(file) {
-    return new Promise(resolve => {
+  async function readAndUploadFile(file) {
+    const dataUrl = await new Promise(resolve => {
       const reader = new FileReader();
       reader.onload  = ev => compressImage(ev.target.result).then(resolve);
       reader.onerror = ()  => resolve(null);
       reader.readAsDataURL(file);
     });
+    if (!dataUrl) return null;
+    return uploadPhoto(dataUrl);
   }
 
   /* ── Kart elementi ───────────────────────────────── */
@@ -103,19 +109,19 @@ const bucket = (function () {
 
   /* ── Toggle done ─────────────────────────────────── */
 
-  function toggleDone(id, isDone) {
+  async function toggleDone(id, isDone) {
     if (!isDone) {
       const item = items.find(it => it.id === id);
       if (item && item.linkedMemoryId) {
         pendingUncheckId = id;
-        render(); // işaretlenmiş görünümü koru
+        render();
         openUncheckModal();
         return;
       }
     }
 
     items = items.map(it => it.id === id ? { ...it, done: isDone } : it);
-    save();
+    await save();
     render();
 
     if (isDone) {
@@ -126,10 +132,10 @@ const bucket = (function () {
 
   /* ── Delete ──────────────────────────────────────── */
 
-  function deleteItem(id) {
+  async function deleteItem(id) {
     if (!confirm('Bu planı silmek istiyor musun?')) return;
     items = items.filter(it => it.id !== id);
-    save();
+    await save();
     render();
   }
 
@@ -161,8 +167,6 @@ const bucket = (function () {
     editingId = null;
   }
 
-  /* Form gönderildiğinde fotoğraf varsa sıkıştırır,
-     kayıt sırasında butonu devre dışı bırakır. */
   function handleFormSubmit(e) {
     e.preventDefault();
     const title     = document.getElementById('bucketTitle').value.trim();
@@ -171,17 +175,17 @@ const bucket = (function () {
 
     if (!title) { document.getElementById('bucketTitle').focus(); return; }
 
-    const persist = (photoDataUrl) => {
+    const persist = async (photoUrl) => {
       if (editingId !== null) {
         items = items.map(it => {
           if (it.id !== editingId) return it;
-          return { ...it, title, photo: photoDataUrl !== null ? photoDataUrl : it.photo };
+          return { ...it, title, photo: photoUrl !== null ? photoUrl : it.photo };
         });
       } else {
         const currentUser = (typeof auth !== 'undefined') ? auth.getUser() : null;
-        items.unshift({ id: Date.now(), title, photo: photoDataUrl, done: false, addedBy: currentUser ? currentUser.username : '' });
+        items.unshift({ id: Date.now(), title, photo: photoUrl, done: false, addedBy: currentUser ? currentUser.username : '' });
       }
-      save();
+      await save();
       render();
       setButtonLoading(submitBtn, false);
       closeAddModal();
@@ -189,7 +193,7 @@ const bucket = (function () {
 
     if (fileInput.files.length) {
       setButtonLoading(submitBtn, true);
-      readFile(fileInput.files[0]).then(persist);
+      readAndUploadFile(fileInput.files[0]).then(persist);
     } else {
       persist(editingId !== null ? null : null);
     }
@@ -214,11 +218,11 @@ const bucket = (function () {
     if (id === null) return;
     const item = items.find(it => it.id === id);
     if (item) {
-      memories.openWithData(item.title, (newMemoryId) => {
+      memories.openWithData(item.title, async (newMemoryId) => {
         items = items.map(it =>
           it.id === id ? { ...it, linkedMemoryId: newMemoryId } : it
         );
-        save();
+        await save();
       });
     }
   }
@@ -236,28 +240,42 @@ const bucket = (function () {
     pendingUncheckId = null;
   }
 
-  function handleUncheckConfirm() {
+  async function handleUncheckConfirm() {
     const id = pendingUncheckId;
     closeUncheckModal();
     if (id === null) return;
     const item = items.find(it => it.id === id);
     if (item && item.linkedMemoryId) {
-      memories.deleteById(item.linkedMemoryId);
+      await memories.deleteById(item.linkedMemoryId);
     }
     items = items.map(it =>
       it.id === id ? { ...it, done: false, linkedMemoryId: null } : it
     );
-    save();
+    await save();
     render();
+  }
+
+  /* ── Realtime ────────────────────────────────────── */
+
+  function subscribeRealtime() {
+    supabaseClient.channel('bucket-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bucket' },
+        async () => {
+          if (Date.now() - _lastSaveMs < REALTIME_GRACE) return;
+          await load();
+          render();
+        })
+      .subscribe();
   }
 
   /* ── Init ────────────────────────────────────────── */
 
-  function init() {
+  async function init() {
     if (!document.getElementById('bucketGrid')) return;
 
-    load();
+    await load();
     render();
+    subscribeRealtime();
 
     document.getElementById('btnAddBucket').addEventListener('click', openAddModal);
     document.getElementById('closeBucketModal').addEventListener('click', closeAddModal);

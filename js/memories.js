@@ -1,8 +1,8 @@
 /**
  * memories.js — Anı kartları, modal, lightbox, mini-harita.
  *
- * escapeHtml, escapeAttr, formatDate, storage, setButtonLoading
- * → utils.js'deki global yardımcılar.
+ * escapeHtml, escapeAttr, formatDate, storage, setButtonLoading,
+ * uploadPhoto, supabaseClient → utils.js'deki global yardımcılar.
  */
 const memories = (function () {
 
@@ -10,20 +10,23 @@ const memories = (function () {
   let cards      = [];
   let editingId  = null;
 
+  /* Realtime çift-render koruması */
+  let _lastSaveMs = 0;
+  const REALTIME_GRACE = 3000;
+
   /* Lightbox durumu */
   let lbPhotos = [];
   let lbIndex  = 0;
 
-  /* Mini-harita durumu (anı modalındaki konum seçimi) */
+  /* Mini-harita durumu */
   let miniMap               = null;
   let miniMapMarker         = null;
   let pendingLocationCoords = null;
 
   /* ── Persistence ─────────────────────────────────── */
 
-  function loadCards() {
-    const parsed = storage.get(STORAGE_KEY, []);
-    /* Eski tek-fotoğraf formatını ({ photo }) → çoklu formata ({ photos }) taşı */
+  async function loadCards() {
+    const parsed = await storage.get(STORAGE_KEY, []);
     cards = parsed.map(c => ({
       id:         c.id,
       title:      c.title,
@@ -34,23 +37,26 @@ const memories = (function () {
     }));
   }
 
-  function saveCards() {
-    if (!storage.set(STORAGE_KEY, cards)) {
-      alert('Depolama alanı dolmak üzere. Bazı anıları silmeyi dene.');
-    }
+  async function saveCards() {
+    _lastSaveMs = Date.now();
+    const ok = await storage.set(STORAGE_KEY, cards);
+    if (!ok) alert('Kayıt başarısız. Lütfen tekrar dene.');
   }
 
-  /* ── Dosya okuma ─────────────────────────────────── */
+  /* ── Dosya okuma + Storage upload ─────────────────── */
 
-  function readFiles(files) {
-    return Promise.all(
+  async function readAndUploadFiles(files) {
+    const dataUrls = await Promise.all(
       Array.from(files).map(f => new Promise(resolve => {
         const reader = new FileReader();
         reader.onload  = ev => compressImage(ev.target.result).then(resolve);
         reader.onerror = ()  => resolve(null);
         reader.readAsDataURL(f);
       }))
-    ).then(results => results.filter(Boolean));
+    );
+    return Promise.all(
+      dataUrls.filter(Boolean).map(url => uploadPhoto(url))
+    );
   }
 
   /* ── Kart elementi ───────────────────────────────── */
@@ -138,23 +144,18 @@ const memories = (function () {
 
   /* ── Delete ──────────────────────────────────────── */
 
-  function deleteCard(id) {
+  async function deleteCard(id) {
     if (!confirm('Bu anıyı silmek istediğine emin misin?')) return;
+    await deleteById(id);
+  }
+
+  async function deleteById(id) {
     removeLinkedLocation(id);
     cards = cards.filter(c => c.id !== id);
-    saveCards();
+    await saveCards();
     renderCards();
   }
 
-  /* bucket.js tarafından onaysız silme için kullanılır */
-  function deleteById(id) {
-    removeLinkedLocation(id);
-    cards = cards.filter(c => c.id !== id);
-    saveCards();
-    renderCards();
-  }
-
-  /* map.js'deki bağlı konumu da sil */
   function removeLinkedLocation(cardId) {
     const card = cards.find(c => c.id === cardId);
     if (card && card.locationId && typeof mapModule !== 'undefined') {
@@ -215,9 +216,8 @@ const memories = (function () {
     document.body.style.overflow = '';
   }
 
-  /* ── Mini-harita (anı modalındaki konum) ─────────── */
+  /* ── Mini-harita ─────────────────────────────────── */
 
-  /* Harita sadece ilk kullanımda başlatılır (lazy init) */
   function initMiniMap() {
     if (typeof L === 'undefined') return;
 
@@ -225,7 +225,6 @@ const memories = (function () {
     if (!container) return;
 
     if (miniMap) {
-      /* Zaten var — görünür hale geldikten sonra boyutu düzelt */
       setTimeout(() => miniMap.invalidateSize(), 80);
       return;
     }
@@ -285,7 +284,6 @@ const memories = (function () {
     document.getElementById('memoryTitle').focus();
   }
 
-  /* bucket.js başlık ön-doldurarak çağırır */
   function openWithData(title, onSaved) {
     editingId       = null;
     pendingPhoto    = null;
@@ -320,18 +318,17 @@ const memories = (function () {
 
   /* ── Form gönderimi ──────────────────────────────── */
 
-  /* Yeni anı kaydını tamamlar; gerekirse harita konumunu ekler */
-  function persistNewCard(title, dateVal, newPhotos, addLoc, locName, locCoords) {
+  async function persistNewCard(title, dateVal, newPhotos, addLoc, locName, locCoords) {
     const newId      = Date.now();
     const currentUser = (typeof auth !== 'undefined') ? auth.getUser() : null;
     const newCard = { id: newId, title, date: dateVal, photos: newPhotos, locationId: null, addedBy: currentUser ? currentUser.username : '' };
     cards.unshift(newCard);
-    saveCards();
+    await saveCards();
     renderCards();
 
     if (addLoc && locCoords && typeof mapModule !== 'undefined') {
       try {
-        const locId = mapModule.addLocation({
+        const locId = await mapModule.addLocation({
           id:       Date.now() + 1,
           name:     locName || title,
           lat:      locCoords.lat,
@@ -341,15 +338,14 @@ const memories = (function () {
           memoryId: newId
         });
         cards = cards.map(c => c.id === newId ? { ...c, locationId: locId } : c);
-        saveCards();
+        await saveCards();
       } catch (_) {}
     }
 
     return newId;
   }
 
-  /* Düzenleme kaydını tamamlar */
-  function persistEditCard(title, dateVal, newPhotos) {
+  async function persistEditCard(title, dateVal, newPhotos) {
     cards = cards.map(c => {
       if (c.id !== editingId) return c;
       return {
@@ -359,7 +355,7 @@ const memories = (function () {
         photos: newPhotos.length ? [...c.photos, ...newPhotos] : c.photos,
       };
     });
-    saveCards();
+    await saveCards();
     renderCards();
   }
 
@@ -371,20 +367,19 @@ const memories = (function () {
     const fileInput = document.getElementById('memoryPhoto');
     const submitBtn = e.target.querySelector('button[type="submit"]');
 
-    /* Form değerlerini async başlamadan önce yakala */
     const addLoc    = document.getElementById('memoryAddLocation').checked;
     const locName   = document.getElementById('memoryLocationName').value.trim();
     const locCoords = pendingLocationCoords ? { ...pendingLocationCoords } : null;
 
     if (!title) { document.getElementById('memoryTitle').focus(); return; }
 
-    const done = (newPhotos) => {
+    const done = async (newPhotos) => {
       if (editingId !== null) {
-        persistEditCard(title, dateVal, newPhotos);
+        await persistEditCard(title, dateVal, newPhotos);
         setButtonLoading(submitBtn, false);
         closeAddModal();
       } else {
-        const newId = persistNewCard(title, dateVal, newPhotos, addLoc, locName, locCoords);
+        const newId = await persistNewCard(title, dateVal, newPhotos, addLoc, locName, locCoords);
         const cb    = onSavedCallback;
         setButtonLoading(submitBtn, false);
         closeAddModal();
@@ -395,7 +390,7 @@ const memories = (function () {
     setButtonLoading(submitBtn, true);
 
     if (fileInput.files.length) {
-      readFiles(fileInput.files).then(done);
+      readAndUploadFiles(fileInput.files).then(done);
     } else if (pendingPhoto) {
       done([pendingPhoto]);
     } else {
@@ -405,20 +400,33 @@ const memories = (function () {
 
   /* ── Harita bağlantısı ───────────────────────────── */
 
-  /* map.js tarafından konum kaydedildiğinde çağrılır */
-  function linkLocation(memoryId, locationId) {
+  async function linkLocation(memoryId, locationId) {
     cards = cards.map(c => c.id === memoryId ? { ...c, locationId } : c);
-    saveCards();
+    await saveCards();
     renderCards();
+  }
+
+  /* ── Realtime ────────────────────────────────────── */
+
+  function subscribeRealtime() {
+    supabaseClient.channel('memories-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'memories' },
+        async () => {
+          if (Date.now() - _lastSaveMs < REALTIME_GRACE) return;
+          await loadCards();
+          renderCards();
+        })
+      .subscribe();
   }
 
   /* ── Init ────────────────────────────────────────── */
 
-  function init() {
+  async function init() {
     if (!document.getElementById('btnAddMemory')) return;
 
-    loadCards();
+    await loadCards();
     renderCards();
+    subscribeRealtime();
 
     document.getElementById('btnAddMemory').addEventListener('click', openAddModal);
     document.getElementById('closeAddMemory').addEventListener('click', closeAddModal);
@@ -427,7 +435,6 @@ const memories = (function () {
     document.getElementById('lightboxPrev').addEventListener('click', lbPrev);
     document.getElementById('lightboxNext').addEventListener('click', lbNext);
 
-    /* Konum checkbox */
     const locCheckbox = document.getElementById('memoryAddLocation');
     const locFields   = document.getElementById('locationExtraFields');
     if (locCheckbox && locFields) {
@@ -442,7 +449,6 @@ const memories = (function () {
       });
     }
 
-    /* Overlay / klavye */
     const lbOverlay  = document.getElementById('lightboxOverlay');
     const addOverlay = document.getElementById('addMemoryModal');
     lbOverlay.addEventListener('click',  e => { if (e.target === lbOverlay)  closeLightbox();  });
@@ -460,6 +466,8 @@ const memories = (function () {
     if (card) openEditModal(card);
   }
 
-  return { init, openWithData, deleteById, linkLocation, openEditById };
+  function getCards() { return cards; }
+
+  return { init, openWithData, deleteById, linkLocation, openEditById, getCards };
 
 })();

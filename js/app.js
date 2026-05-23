@@ -2,12 +2,13 @@
  * app.js — Uygulama başlangıç noktası.
  *
  * DOMContentLoaded sonrası:
- *   1. Kaydedilmiş arkaplan fotoğrafını geri yükler.
- *   2. Arkaplan yükleme kontrolünü bağlar.
- *   3. Gece/Gündüz tema değiştiriciyi başlatır.
- *   4. Her özellik modülünü init() ile başlatır.
- *   5. Kayan kalp parçacıklarını başlatır.
- *   6. Aktif nav linkini scroll'a göre günceller.
+ *   1. localStorage → Supabase tek seferlik veri göçünü çalıştırır.
+ *   2. Kimlik doğrulamayı başlatır.
+ *   3. Kaydedilmiş arkaplan fotoğrafını geri yükler.
+ *   4. Gece/Gündüz tema değiştiriciyi başlatır.
+ *   5. Her özellik modülünü init() ile başlatır.
+ *   6. Kayan kalp parçacıklarını başlatır.
+ *   7. Aktif nav linkini scroll'a göre günceller.
  */
 (function () {
 
@@ -23,20 +24,21 @@
 
   /* ── Arkaplan ──────────────────────────────────────── */
 
-  function applyBg(dataUrl) {
+  function applyBg(url) {
     const bgEl = document.getElementById('bgPhoto');
-    if (bgEl) bgEl.style.backgroundImage = 'url(' + dataUrl + ')';
+    if (bgEl) bgEl.style.backgroundImage = 'url(' + url + ')';
   }
 
   function handleBgUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = function (ev) {
-      compressImage(ev.target.result, BG_COMPRESS_PX, BG_COMPRESS_QUALITY).then(function (dataUrl) {
-        applyBg(dataUrl);
-        storage.setRaw(BG_KEY, dataUrl);
-      });
+    reader.onload = async function (ev) {
+      const dataUrl = await compressImage(ev.target.result, BG_COMPRESS_PX, BG_COMPRESS_QUALITY);
+      applyBg(dataUrl); /* Anında göster */
+      const url = await uploadPhoto(dataUrl, 'bg/background.jpg');
+      await storage.setRaw(BG_KEY, url);
+      if (url !== dataUrl) applyBg(url);
     };
     reader.readAsDataURL(file);
     e.target.value = '';
@@ -55,10 +57,10 @@
     }
   }
 
-  function toggleTheme() {
+  async function toggleTheme() {
     const isDay    = document.body.classList.contains('day-mode');
     const newTheme = isDay ? 'night' : 'day';
-    storage.setRaw(THEME_KEY, newTheme);
+    await storage.setRaw(THEME_KEY, newTheme);
     applyTheme(newTheme);
   }
 
@@ -97,25 +99,28 @@
 
   /* ── Bootstrap ─────────────────────────────────────── */
 
-  document.addEventListener('DOMContentLoaded', function () {
+  document.addEventListener('DOMContentLoaded', async function () {
 
-    /* Kimlik doğrulama (her şeyden önce çalışır) */
+    /* Kimlik doğrulama (sync — localStorage tabanlı) */
     auth.init();
 
+    /* localStorage → Supabase tek seferlik veri göçü */
+    await migrateFromLocalStorage();
+
     /* Arkaplan */
-    const savedBg = storage.getRaw(BG_KEY);
+    const savedBg = await storage.getRaw(BG_KEY);
     if (savedBg) applyBg(savedBg);
 
     const bgInput = document.getElementById('bgUpload');
     if (bgInput) bgInput.addEventListener('change', handleBgUpload);
 
     /* Tema */
-    const savedTheme = storage.getRaw(THEME_KEY) || 'night';
+    const savedTheme = (await storage.getRaw(THEME_KEY)) || 'night';
     applyTheme(savedTheme);
     const themeBtn = document.getElementById('themeToggle');
     if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
 
-    /* Modüller */
+    /* Modüller — async init, fire-and-forget (kendi içlerinde hata yönetirler) */
     counter.init();
     player.init();
     bucket.init();
@@ -124,6 +129,7 @@
     announcements.init();
     quotes.init();
     mapModule.init();
+
     /* Kayan kalpler */
     startFloatingHearts();
 

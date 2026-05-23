@@ -1,7 +1,7 @@
 /**
  * timeline.js — Anıların kronolojik zaman tüneli görünümü.
  *
- * Anıları localStorage'dan okur, tarihe göre sıralar,
+ * Anıları Supabase'den okur, tarihe göre sıralar,
  * yıllara göre gruplandırır ve tam ekran timeline olarak gösterir.
  * Public API: timeline.init(), timeline.refresh()
  */
@@ -11,8 +11,8 @@ const timeline = (function () {
 
   /* ── Veri ─────────────────────────────────────────── */
 
-  function readCards() {
-    const parsed = storage.get(STORAGE_KEY, []);
+  async function readCards() {
+    const parsed = await storage.get(STORAGE_KEY, []);
     return parsed.map(c => ({
       id:         c.id,
       title:      c.title      || '',
@@ -40,12 +40,12 @@ const timeline = (function () {
 
   /* ── Render ───────────────────────────────────────── */
 
-  function render() {
+  async function render() {
     const container = document.getElementById('timelineContent');
     if (!container) return;
     container.innerHTML = '';
 
-    const cards  = readCards();
+    const cards  = await readCards();
     const groups = groupByYear(cards);
 
     if (!cards.length) {
@@ -120,10 +120,10 @@ const timeline = (function () {
       if (typeof memories !== 'undefined') memories.openEditById(card.id);
     });
 
-    item.querySelector('.tl-btn-delete').addEventListener('click', () => {
+    item.querySelector('.tl-btn-delete').addEventListener('click', async () => {
       if (!confirm('Bu anıyı silmek istediğine emin misin?')) return;
-      if (typeof memories !== 'undefined') memories.deleteById(card.id);
-      render();
+      if (typeof memories !== 'undefined') await memories.deleteById(card.id);
+      await render();
     });
 
     return item;
@@ -153,12 +153,12 @@ const timeline = (function () {
 
   /* ── Aç / Kapat ───────────────────────────────────── */
 
-  function open() {
+  async function open() {
     const overlay = document.getElementById('timelineOverlay');
     if (!overlay) return;
     overlay.classList.add('open');
     document.body.style.overflow = 'hidden';
-    render();
+    await render();
     const body = document.getElementById('timelineBody');
     if (body) body.scrollTop = 0;
   }

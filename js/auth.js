@@ -10,18 +10,22 @@ const auth = (function () {
 
   const USERS = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.users) ? APP_CONFIG.users : [];
 
-  /* ── Session ──────────────────────────────────────── */
+  /* ── Session (localStorage — sync gereksinimi nedeniyle) ── */
 
   function getUser() {
-    return storage.get(SESSION_KEY, null);
+    try {
+      const raw = localStorage.getItem(SESSION_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (_) { return null; }
   }
 
   function saveSession(user) {
-    storage.set(SESSION_KEY, { username: user.username });
+    try { localStorage.setItem(SESSION_KEY, JSON.stringify({ username: user.username })); }
+    catch (_) {}
   }
 
   function clearSession() {
-    storage.remove(SESSION_KEY);
+    try { localStorage.removeItem(SESSION_KEY); } catch (_) {}
   }
 
   /* ── UI ───────────────────────────────────────────── */

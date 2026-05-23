@@ -1,7 +1,7 @@
 /**
  * announcements.js — Duyurular yan paneli.
  *
- * Duyuruları localStorage'da saklar, okundu takibi yapar,
+ * Duyuruları Supabase'de saklar, okundu takibi yapar,
  * admin için ekleme/silme formu sunar.
  * Public API: announcements.init(), announcements.updateBadge()
  */
@@ -12,14 +12,19 @@ const announcements = (function () {
     ? APP_CONFIG.users[0].username
     : '';
 
+  /* Realtime çift-render koruması */
+  let _lastSaveMs = 0;
+  const REALTIME_GRACE = 3000;
+
   /* ── Veri ─────────────────────────────────────────── */
 
-  function readAll() {
+  async function readAll() {
     return storage.get(STORAGE_KEY, []);
   }
 
-  function saveAll(list) {
-    storage.set(STORAGE_KEY, list);
+  async function saveAll(list) {
+    _lastSaveMs = Date.now();
+    await storage.set(STORAGE_KEY, list);
   }
 
   function currentUsername() {
@@ -37,35 +42,34 @@ const announcements = (function () {
     return normalize(u) === normalize(ADMIN_USERNAME);
   }
 
-  function unreadCount() {
+  async function unreadCount() {
     const u = currentUsername();
     if (!u) return 0;
-    return readAll().filter(a => !a.readBy.includes(u)).length;
+    const list = await readAll();
+    return list.filter(a => !a.readBy.includes(u)).length;
   }
 
-  function markAllRead() {
+  async function markAllRead() {
     const u = currentUsername();
     if (!u) return;
-    const list = readAll();
+    const list = await readAll();
     let changed = false;
     list.forEach(a => {
-      if (!a.readBy.includes(u)) {
-        a.readBy.push(u);
-        changed = true;
-      }
+      if (!a.readBy.includes(u)) { a.readBy.push(u); changed = true; }
     });
-    if (changed) saveAll(list);
+    if (changed) await saveAll(list);
   }
 
-  function deleteById(id) {
-    saveAll(readAll().filter(a => a.id !== id));
-    render();
+  async function deleteById(id) {
+    const list = await readAll();
+    await saveAll(list.filter(a => a.id !== id));
+    await render();
     updateBadge();
   }
 
-  function addAnnouncement(title, body) {
+  async function addAnnouncement(title, body) {
     const u    = currentUsername();
-    const list = readAll();
+    const list = await readAll();
     list.unshift({
       id:     Date.now().toString(),
       title,
@@ -73,17 +77,17 @@ const announcements = (function () {
       date:   new Date().toISOString(),
       readBy: u ? [u] : [],
     });
-    saveAll(list);
-    render();
+    await saveAll(list);
+    await render();
     updateBadge();
   }
 
   /* ── Badge ─────────────────────────────────────────── */
 
-  function updateBadge() {
+  async function updateBadge() {
     const badge = document.getElementById('announcementsBadge');
     if (!badge) return;
-    const count = unreadCount();
+    const count = await unreadCount();
     if (count > 0) {
       badge.textContent = count;
       badge.hidden = false;
@@ -94,12 +98,12 @@ const announcements = (function () {
 
   /* ── Render ─────────────────────────────────────────── */
 
-  function render() {
+  async function render() {
     const container = document.getElementById('announcementsContent');
     if (!container) return;
     container.innerHTML = '';
 
-    const list  = readAll();
+    const list  = await readAll();
     const u     = currentUsername();
     const admin = isAdmin();
 
@@ -131,9 +135,9 @@ const announcements = (function () {
         <p class="announcements-card-body">${escapeHtml(a.body)}</p>`;
 
       if (admin) {
-        card.querySelector('.announcements-card-delete').addEventListener('click', () => {
+        card.querySelector('.announcements-card-delete').addEventListener('click', async () => {
           if (!confirm('Bu duyuruyu silmek istediğine emin misin?')) return;
-          deleteById(a.id);
+          await deleteById(a.id);
         });
       }
 
@@ -145,14 +149,14 @@ const announcements = (function () {
 
   /* ── Aç / Kapat ─────────────────────────────────────── */
 
-  function open() {
+  async function open() {
     const overlay = document.getElementById('announcementsOverlay');
     if (!overlay) return;
     overlay.classList.add('open');
     document.body.style.overflow = 'hidden';
-    markAllRead();
-    updateBadge();
-    render();
+    await markAllRead();
+    updateBadge(); /* fire and forget */
+    await render();
     const body = document.getElementById('announcementsBody');
     if (body) body.scrollTop = 0;
   }
@@ -164,9 +168,23 @@ const announcements = (function () {
     document.body.style.overflow = '';
   }
 
+  /* ── Realtime ─────────────────────────────────────── */
+
+  function subscribeRealtime() {
+    supabaseClient.channel('announcements-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'announcements' },
+        async () => {
+          if (Date.now() - _lastSaveMs < REALTIME_GRACE) return;
+          updateBadge();
+          const overlay = document.getElementById('announcementsOverlay');
+          if (overlay && overlay.classList.contains('open')) await render();
+        })
+      .subscribe();
+  }
+
   /* ── Init ─────────────────────────────────────────── */
 
-  function init() {
+  async function init() {
     const openBtn  = document.getElementById('btnAnnouncements');
     const closeBtn = document.getElementById('btnCloseAnnouncements');
 
@@ -192,18 +210,19 @@ const announcements = (function () {
     }
 
     if (saveBtn && titleInput && bodyInput) {
-      saveBtn.addEventListener('click', () => {
+      saveBtn.addEventListener('click', async () => {
         const t = titleInput.value.trim();
         const b = bodyInput.value.trim();
         if (!t) { titleInput.focus(); return; }
-        addAnnouncement(t, b);
+        await addAnnouncement(t, b);
         titleInput.value = '';
         bodyInput.value  = '';
         if (addForm) addForm.hidden = true;
       });
     }
 
-    updateBadge();
+    subscribeRealtime();
+    updateBadge(); /* fire and forget */
   }
 
   return { init, updateBadge };
