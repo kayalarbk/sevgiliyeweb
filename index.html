@@ -366,6 +366,39 @@
     <div class="announcements-add-section" id="announcementsAddSection" hidden>
       <button class="announcements-add-toggle" id="btnShowAddAnnouncement" type="button">+ Duyuru Ekle</button>
       <div class="announcements-add-form" id="announcementsAddForm" hidden>
+
+        <!-- Emoji seçici -->
+        <div class="ann-field-row">
+          <span class="ann-form-label">Emoji</span>
+          <div class="ann-emoji-picker" id="annEmojiPicker">
+            <button type="button" class="ann-emoji-btn" data-emoji="❤️">❤️</button>
+            <button type="button" class="ann-emoji-btn" data-emoji="🎉">🎉</button>
+            <button type="button" class="ann-emoji-btn" data-emoji="📍">📍</button>
+            <button type="button" class="ann-emoji-btn" data-emoji="🎂">🎂</button>
+            <button type="button" class="ann-emoji-btn" data-emoji="💕">💕</button>
+            <button type="button" class="ann-emoji-btn" data-emoji="🌹">🌹</button>
+          </div>
+        </div>
+
+        <!-- Öncelik -->
+        <div class="ann-field-row">
+          <span class="ann-form-label">Öncelik</span>
+          <div class="ann-priority-group">
+            <label class="ann-priority-opt">
+              <input type="radio" name="annPriority" value="normal" checked />
+              <span>Normal</span>
+            </label>
+            <label class="ann-priority-opt ann-priority-opt--important">
+              <input type="radio" name="annPriority" value="important" />
+              <span>Önemli</span>
+            </label>
+            <label class="ann-priority-opt ann-priority-opt--urgent">
+              <input type="radio" name="annPriority" value="urgent" />
+              <span>Acil</span>
+            </label>
+          </div>
+        </div>
+
         <input class="announcements-add-input" type="text" id="announcementTitleInput" placeholder="Başlık" autocomplete="off" />
         <textarea class="announcements-add-textarea" id="announcementBodyInput" placeholder="Duyuru metni…"></textarea>
         <button class="announcements-add-save" id="btnSaveAnnouncement" type="button">Kaydet</button>

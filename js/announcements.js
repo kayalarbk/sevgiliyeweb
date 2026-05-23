@@ -1,8 +1,15 @@
 /**
  * announcements.js — Duyurular yan paneli.
  *
- * Duyuruları Supabase'de saklar, okundu takibi yapar,
- * admin için ekleme/silme formu sunar.
+ * Özellikler:
+ *   • Başlık + mesaj
+ *   • Öncelik: normal / important / urgent (renkli badge + border)
+ *   • Emoji seçici (❤️ 🎉 📍 🎂 💕 🌹)
+ *   • Otomatik tarih/saat damgası
+ *   • Okundu/okunmadı takibi
+ *   • Tarayıcı push notification (Notification API)
+ *   • Supabase Realtime senkronizasyon
+ *
  * Public API: announcements.init(), announcements.updateBadge()
  */
 const announcements = (function () {
@@ -12,20 +19,19 @@ const announcements = (function () {
     ? APP_CONFIG.users[0].username
     : '';
 
+  const PRIORITY_LABELS = { normal: '', important: 'Önemli', urgent: 'Acil' };
+
   /* Realtime çift-render koruması */
   let _lastSaveMs = 0;
   const REALTIME_GRACE = 3000;
 
-  /* ── Veri ─────────────────────────────────────────── */
+  /* Diğer cihazdan gelen yeni bildirimleri tespit etmek için bilinen ID seti */
+  let _knownIds = new Set();
 
-  async function readAll() {
-    return storage.get(STORAGE_KEY, []);
-  }
+  /* Form durumu (emoji seçimi) */
+  let _selectedEmoji = '';
 
-  async function saveAll(list) {
-    _lastSaveMs = Date.now();
-    await storage.set(STORAGE_KEY, list);
-  }
+  /* ── Kullanıcı yardımcıları ────────────────────────── */
 
   function currentUsername() {
     const user = auth.getUser();
@@ -40,6 +46,17 @@ const announcements = (function () {
       .replace(/ı/g, 'i').replace(/ö/g, 'o').replace(/ç/g, 'c')
       .replace(/\s+/g, '');
     return normalize(u) === normalize(ADMIN_USERNAME);
+  }
+
+  /* ── Veri ─────────────────────────────────────────── */
+
+  async function readAll() {
+    return storage.get(STORAGE_KEY, []);
+  }
+
+  async function saveAll(list) {
+    _lastSaveMs = Date.now();
+    await storage.set(STORAGE_KEY, list);
   }
 
   async function unreadCount() {
@@ -62,21 +79,26 @@ const announcements = (function () {
 
   async function deleteById(id) {
     const list = await readAll();
+    _knownIds.delete(id);
     await saveAll(list.filter(a => a.id !== id));
     await render();
     updateBadge();
   }
 
-  async function addAnnouncement(title, body) {
+  async function addAnnouncement(title, body, emoji, priority) {
     const u    = currentUsername();
     const list = await readAll();
-    list.unshift({
-      id:     Date.now().toString(),
+    const newItem = {
+      id:       Date.now().toString(),
       title,
       body,
-      date:   new Date().toISOString(),
-      readBy: u ? [u] : [],
-    });
+      emoji:    emoji    || '',
+      priority: priority || 'normal',
+      date:     new Date().toISOString(),
+      readBy:   u ? [u] : [],
+    };
+    _knownIds.add(newItem.id); /* kendimizdeki kaydı bilinen olarak işaretle */
+    list.unshift(newItem);
     await saveAll(list);
     await render();
     updateBadge();
@@ -94,6 +116,29 @@ const announcements = (function () {
     } else {
       badge.hidden = true;
     }
+  }
+
+  /* ── Push Notification ────────────────────────────── */
+
+  function requestNotificationPermission() {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }
+
+  function sendPushNotification(item) {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    const prefix = item.emoji ? item.emoji + ' ' : '';
+    const title  = prefix + (item.title || 'Yeni Duyuru');
+    const body   = item.body || '';
+    try {
+      new Notification(title, {
+        body,
+        tag:    'love-app-' + item.id,
+        silent: false,
+        icon:   "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>❤️</text></svg>",
+      });
+    } catch (_) {}
   }
 
   /* ── Render ─────────────────────────────────────────── */
@@ -117,21 +162,44 @@ const announcements = (function () {
 
     const frag = document.createDocumentFragment();
     list.forEach(a => {
-      const isUnread = u && !a.readBy.includes(u);
-      const card     = document.createElement('div');
-      card.className = 'announcements-card' + (isUnread ? ' announcements-card--unread' : '');
+      const isUnread   = u && !a.readBy.includes(u);
+      const priority   = a.priority || 'normal';
+      const emoji      = a.emoji || '';
+
+      const card = document.createElement('div');
+      card.className =
+        'announcements-card' +
+        (isUnread ? ' announcements-card--unread' : '') +
+        (' ann-priority-' + priority);
       card.dataset.id = a.id;
+
+      const priorityLabel = PRIORITY_LABELS[priority];
+      const priorityBadge = priorityLabel
+        ? `<span class="ann-priority-badge ann-priority-badge--${priority}">${priorityLabel}</span>`
+        : '';
 
       const deleteBtnHtml = admin
         ? `<button class="announcements-card-delete" type="button" aria-label="Sil" data-id="${escapeAttr(a.id)}">🗑️</button>`
         : '';
 
+      const emojiHtml = emoji
+        ? `<span class="ann-title-emoji" aria-hidden="true">${escapeHtml(emoji)}</span>`
+        : '';
+
+      const dateStr = a.date
+        ? formatDate(a.date.substring(0, 10)) +
+          ' ' + new Date(a.date).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
+        : '';
+
       card.innerHTML = `
         <div class="announcements-card-header">
-          <time class="announcements-card-date">${escapeHtml(formatDate(a.date.substring(0, 10)))}</time>
-          ${deleteBtnHtml}
+          <time class="announcements-card-date">${escapeHtml(dateStr)}</time>
+          <div class="ann-card-header-right">
+            ${priorityBadge}
+            ${deleteBtnHtml}
+          </div>
         </div>
-        <h3 class="announcements-card-title">${escapeHtml(a.title)}</h3>
+        <h3 class="announcements-card-title">${emojiHtml}${escapeHtml(a.title)}</h3>
         <p class="announcements-card-body">${escapeHtml(a.body)}</p>`;
 
       if (admin) {
@@ -154,8 +222,9 @@ const announcements = (function () {
     if (!overlay) return;
     overlay.classList.add('open');
     document.body.style.overflow = 'hidden';
+    requestNotificationPermission();
     await markAllRead();
-    updateBadge(); /* fire and forget */
+    updateBadge();
     await render();
     const body = document.getElementById('announcementsBody');
     if (body) body.scrollTop = 0;
@@ -168,13 +237,61 @@ const announcements = (function () {
     document.body.style.overflow = '';
   }
 
+  /* ── Emoji picker yardımcıları ───────────────────────── */
+
+  function initEmojiPicker() {
+    const picker = document.getElementById('annEmojiPicker');
+    if (!picker) return;
+    _selectedEmoji = '';
+
+    picker.querySelectorAll('.ann-emoji-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const emoji = btn.dataset.emoji;
+        if (_selectedEmoji === emoji) {
+          /* Aynıya tekrar tıklamak seçimi kaldırır */
+          _selectedEmoji = '';
+          btn.classList.remove('ann-emoji-btn--selected');
+        } else {
+          _selectedEmoji = emoji;
+          picker.querySelectorAll('.ann-emoji-btn').forEach(b => b.classList.remove('ann-emoji-btn--selected'));
+          btn.classList.add('ann-emoji-btn--selected');
+        }
+      });
+    });
+  }
+
+  function resetAddForm() {
+    const titleInput = document.getElementById('announcementTitleInput');
+    const bodyInput  = document.getElementById('announcementBodyInput');
+    if (titleInput) titleInput.value = '';
+    if (bodyInput)  bodyInput.value  = '';
+
+    /* Emoji seçimini sıfırla */
+    _selectedEmoji = '';
+    const picker = document.getElementById('annEmojiPicker');
+    if (picker) picker.querySelectorAll('.ann-emoji-btn').forEach(b => b.classList.remove('ann-emoji-btn--selected'));
+
+    /* Önceliği "normal" a döndür */
+    const normalRadio = document.querySelector('input[name="annPriority"][value="normal"]');
+    if (normalRadio) normalRadio.checked = true;
+  }
+
   /* ── Realtime ─────────────────────────────────────── */
 
   function subscribeRealtime() {
     supabaseClient.channel('announcements-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'announcements' },
         async () => {
-          if (Date.now() - _lastSaveMs < REALTIME_GRACE) return;
+          const isFromOther = Date.now() - _lastSaveMs >= REALTIME_GRACE;
+          if (!isFromOther) return;
+
+          const list = await readAll();
+
+          /* Yeni gelen öğeler için push notification gönder */
+          const newItems = list.filter(a => !_knownIds.has(a.id));
+          newItems.forEach(a => sendPushNotification(a));
+          list.forEach(a => _knownIds.add(a.id));
+
           updateBadge();
           const overlay = document.getElementById('announcementsOverlay');
           if (overlay && overlay.classList.contains('open')) await render();
@@ -196,16 +313,24 @@ const announcements = (function () {
       if (e.key === 'Escape' && ov && ov.classList.contains('open')) close();
     });
 
+    /* ── Admin ekleme formu ── */
     const addBtn     = document.getElementById('btnShowAddAnnouncement');
     const addForm    = document.getElementById('announcementsAddForm');
     const saveBtn    = document.getElementById('btnSaveAnnouncement');
     const titleInput = document.getElementById('announcementTitleInput');
     const bodyInput  = document.getElementById('announcementBodyInput');
 
+    initEmojiPicker();
+
     if (addBtn && addForm) {
       addBtn.addEventListener('click', () => {
-        addForm.hidden = !addForm.hidden;
-        if (!addForm.hidden && titleInput) titleInput.focus();
+        const opening = addForm.hidden;
+        addForm.hidden = !opening;
+        if (opening) {
+          resetAddForm();
+          requestNotificationPermission();
+          if (titleInput) titleInput.focus();
+        }
       });
     }
 
@@ -214,15 +339,28 @@ const announcements = (function () {
         const t = titleInput.value.trim();
         const b = bodyInput.value.trim();
         if (!t) { titleInput.focus(); return; }
-        await addAnnouncement(t, b);
-        titleInput.value = '';
-        bodyInput.value  = '';
+
+        const priority = (document.querySelector('input[name="annPriority"]:checked') || {}).value || 'normal';
+        const emoji    = _selectedEmoji;
+
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Kaydediliyor…';
+
+        await addAnnouncement(t, b, emoji, priority);
+
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Kaydet';
+        resetAddForm();
         if (addForm) addForm.hidden = true;
       });
     }
 
+    /* Bilinen ID'leri yükle (push notification dedup için) */
+    const list = await readAll();
+    list.forEach(a => _knownIds.add(a.id));
+
     subscribeRealtime();
-    updateBadge(); /* fire and forget */
+    updateBadge();
   }
 
   return { init, updateBadge };
