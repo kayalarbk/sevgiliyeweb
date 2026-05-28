@@ -29,7 +29,7 @@
 }
 
 body.player-visible .quotes-toggle-btn {
-  bottom: 122px;
+  bottom: 148px;
 }
 
 .quotes-toggle-btn:hover {
@@ -125,7 +125,7 @@ body.player-visible .quotes-widget {
 /* ── Mobile: expand to full width just above player ── */
 @media (max-width: 480px) {
   body.player-visible .quotes-toggle-btn {
-    bottom: 130px;
+    bottom: 148px;
   }
   body.player-visible .quotes-widget {
     bottom: 180px;

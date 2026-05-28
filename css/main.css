@@ -122,6 +122,16 @@ body.day-mode .bg-overlay {
   backdrop-filter: brightness(1.05) saturate(0.85);
   -webkit-backdrop-filter: brightness(1.05) saturate(0.85);
 }
+body.day-mode .memory-card img,
+body.day-mode .bucket-card img {
+  filter: brightness(0.92) saturate(1.1);
+  mix-blend-mode: normal;
+}
+body.day-mode .memory-card,
+body.day-mode .bucket-card {
+  background: #fdf0f4;
+  border: 1px solid #f0b8cc;
+}
 
 /* ── Reset ── */
 *, *::before, *::after {
