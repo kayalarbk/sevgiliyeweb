@@ -18,6 +18,9 @@
 <link rel="stylesheet" href="css/auth.css" />
   <link rel="stylesheet" href="css/timeline.css" />
   <link rel="stylesheet" href="css/announcements.css" />
+  <link rel="stylesheet" href="css/tabs.css" />
+  <link rel="stylesheet" href="css/watchlist.css" />
+  <link rel="stylesheet" href="css/dreams.css" />
 </head>
 <body>
 
@@ -133,13 +136,71 @@
       </div>
     </section>
 
-    <!-- ── BUCKET LIST SECTION ── -->
+    <!-- ── BİRLİKTE YAŞAYACAKLARIMIZ (TAB SİSTEMİ) ── -->
     <section class="section-bucket" id="bucketSection">
-      <div class="bucket-header">
-        <h2 class="section-title">Birlikte Yapacaklarımız</h2>
-        <button class="btn-add-bucket" id="btnAddBucket" type="button">+ Ekle</button>
+
+      <!-- Bölüm başlığı -->
+      <div class="living-section-header">
+        <h2 class="section-title">Birlikte Yaşayacaklarımız</h2>
       </div>
-      <div class="bucket-grid" id="bucketGrid"></div>
+
+      <!-- Sekme navigasyonu -->
+      <nav class="tabs-nav" role="tablist" aria-label="İçerik sekmeleri">
+        <button class="tab-btn" id="tabBtnBucket" role="tab"
+                aria-controls="panelBucket" aria-selected="true" type="button">
+          📋 Yapılacaklar <span class="tab-badge" id="tabBadgeBucket">0/0</span>
+        </button>
+        <button class="tab-btn" id="tabBtnWatchlist" role="tab"
+                aria-controls="panelWatchlist" aria-selected="false" type="button">
+          🎬 İzleyeceklerimiz <span class="tab-badge" id="tabBadgeWatchlist">0/0</span>
+        </button>
+        <button class="tab-btn" id="tabBtnDreams" role="tab"
+                aria-controls="panelDreams" aria-selected="false" type="button">
+          💭 Hayallerimiz <span class="tab-badge" id="tabBadgeDreams">0/0</span>
+        </button>
+      </nav>
+
+      <!-- Sekme panelleri -->
+      <div class="tab-panels">
+
+        <!-- Tab 1: Yapılacaklar (mevcut bucket list) -->
+        <div class="tab-panel" id="panelBucket" role="tabpanel" aria-labelledby="tabBtnBucket">
+          <div class="tab-panel-header">
+            <span></span>
+            <button class="btn-add-bucket" id="btnAddBucket" type="button">+ Ekle</button>
+          </div>
+          <div class="bucket-grid" id="bucketGrid"></div>
+        </div>
+
+        <!-- Tab 2: İzleyeceklerimiz -->
+        <div class="tab-panel" id="panelWatchlist" role="tabpanel" aria-labelledby="tabBtnWatchlist">
+          <div class="tab-panel-header">
+            <div class="filter-group" id="watchlistFilters">
+              <button class="filter-btn active" data-filter="all"     type="button">Tümü</button>
+              <button class="filter-btn"        data-filter="pending" type="button">İzlenecek</button>
+              <button class="filter-btn"        data-filter="watched" type="button">İzlendi</button>
+            </div>
+            <button class="btn-add-watchlist" id="btnAddWatchlist" type="button">+ Ekle</button>
+          </div>
+          <div class="watchlist-grid" id="watchlistGrid"></div>
+        </div>
+
+        <!-- Tab 3: Hayallerimiz -->
+        <div class="tab-panel" id="panelDreams" role="tabpanel" aria-labelledby="tabBtnDreams">
+          <div class="tab-panel-header">
+            <div class="filter-group" id="dreamsFilters">
+              <button class="filter-btn active" data-filter="all"        type="button">Tümü</button>
+              <button class="filter-btn"        data-filter="hayal"      type="button">Hayal</button>
+              <button class="filter-btn"        data-filter="planlandi"  type="button">Planlandı</button>
+              <button class="filter-btn"        data-filter="devam"      type="button">Devam Ediyor</button>
+              <button class="filter-btn"        data-filter="tamamlandi" type="button">Tamamlandı</button>
+            </div>
+            <button class="btn-add-dream" id="btnAddDream" type="button">+ Ekle</button>
+          </div>
+          <div class="dreams-grid" id="dreamsGrid"></div>
+        </div>
+
+      </div>
     </section>
 
     <!-- ── MAP SECTION ── -->
@@ -267,6 +328,96 @@
       <button class="modal-close" id="closeAllMemories" type="button" aria-label="Kapat">&#10005;</button>
       <h3 class="modal-title">Tüm Anılar</h3>
       <div class="all-memories-grid" id="allMemoriesGrid"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       ADD WATCHLIST MODAL
+  ════════════════════════════════════════ -->
+  <div class="modal-overlay" id="addWatchlistModal" role="dialog" aria-modal="true" aria-label="Film/Dizi ekle">
+    <div class="modal-box">
+      <button class="modal-close" id="closeWatchlistModal" type="button" aria-label="Kapat">&#10005;</button>
+      <h3 class="modal-title" id="wlModalTitle">Film / Dizi Ekle</h3>
+      <form class="memory-form" id="wlForm" novalidate>
+        <div class="form-field">
+          <label for="wlTitle">Başlık</label>
+          <input type="text" id="wlTitle" placeholder="Interstellar…" autocomplete="off" required />
+        </div>
+        <div class="form-field">
+          <label>Tür</label>
+          <div class="radio-group">
+            <label class="radio-opt">
+              <input type="radio" name="wlType" value="Film" checked /> Film
+            </label>
+            <label class="radio-opt">
+              <input type="radio" name="wlType" value="Dizi" /> Dizi
+            </label>
+          </div>
+        </div>
+        <div class="form-field">
+          <label class="checkbox-label">
+            <input type="checkbox" id="wlWatched" />
+            <span>İzlendi ✅</span>
+          </label>
+        </div>
+        <div class="form-field wl-rating-field" id="wlRatingField">
+          <label>Puan</label>
+          <div class="star-picker" id="wlStarPicker">
+            <span class="star-opt" data-value="1">★</span>
+            <span class="star-opt" data-value="2">★</span>
+            <span class="star-opt" data-value="3">★</span>
+            <span class="star-opt" data-value="4">★</span>
+            <span class="star-opt" data-value="5">★</span>
+          </div>
+          <input type="hidden" id="wlRatingValue" />
+        </div>
+        <button type="submit" class="btn-save-memory">Kaydet</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       ADD DREAM MODAL
+  ════════════════════════════════════════ -->
+  <div class="modal-overlay" id="addDreamModal" role="dialog" aria-modal="true" aria-label="Hayal ekle">
+    <div class="modal-box modal-box--scroll">
+      <button class="modal-close" id="closeDreamModal" type="button" aria-label="Kapat">&#10005;</button>
+      <h3 class="modal-title" id="dreamModalTitle">Hayal Ekle</h3>
+      <form class="memory-form" id="dreamForm" novalidate>
+        <div class="form-field">
+          <label for="dreamTitle">Başlık</label>
+          <input type="text" id="dreamTitle" placeholder="Gitar çalmayı öğren…" autocomplete="off" required />
+        </div>
+        <div class="form-field">
+          <label>Kategori</label>
+          <div class="radio-group">
+            <label class="radio-opt">
+              <input type="radio" name="dreamCategory" value="Beceri" checked /> Beceri
+            </label>
+            <label class="radio-opt">
+              <input type="radio" name="dreamCategory" value="Eğitim" /> Eğitim
+            </label>
+          </div>
+        </div>
+        <div class="form-field">
+          <label for="dreamDesc">Açıklama</label>
+          <textarea class="form-textarea" id="dreamDesc" placeholder="Bu hayalimiz hakkında…" rows="3"></textarea>
+        </div>
+        <div class="form-field">
+          <label for="dreamStatus">Durum</label>
+          <select class="form-select" id="dreamStatus">
+            <option value="hayal">Hayal</option>
+            <option value="planlandi">Planlandı</option>
+            <option value="devam">Devam Ediyor</option>
+            <option value="tamamlandi">Tamamlandı</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label for="dreamProgress">İlerleme: <span id="dreamProgressLabel">0%</span></label>
+          <input type="range" class="progress-slider" id="dreamProgress" min="0" max="100" value="0" />
+        </div>
+        <button type="submit" class="btn-save-memory">Kaydet</button>
+      </form>
     </div>
   </div>
 
@@ -441,10 +592,13 @@
   <script src="js/utils.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/counter.js"></script>
+  <script src="js/tabs.js"></script>
   <script src="js/bucket.js"></script>
   <script src="js/tracks.js"></script>
   <script src="js/player.js"></script>
   <script src="js/memories.js"></script>
+  <script src="js/watchlist.js"></script>
+  <script src="js/dreams.js"></script>
   <script src="js/quotes.js"></script>
   <script src="js/map.js"></script>
 <script src="js/announcements.js"></script>

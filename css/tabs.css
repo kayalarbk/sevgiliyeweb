@@ -1,0 +1,338 @@
+/* ═══════════════════════════════════════════════════
+   tabs.css — "Birlikte Yaşayacaklarımız" sekme sistemi
+             + paylaşılan form bileşenleri (select, radio, range…)
+════════════════════════════════════════════════════ */
+
+/* ── Section header ── */
+.living-section-header {
+  margin-bottom: 20px;
+}
+
+/* ── Tab navigation bar ── */
+.tabs-nav {
+  display: flex;
+  gap: 4px;
+  border-bottom: 2px solid var(--color-border);
+  margin-bottom: 28px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tabs-nav::-webkit-scrollbar { display: none; }
+
+.tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  font-family: var(--font-ui);
+  font-size: 0.87rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  cursor: pointer;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition:
+    color var(--transition-fast),
+    background var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.tab-btn:hover {
+  color: var(--color-text);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.tab-btn.active {
+  color: var(--color-primary-light);
+  border-bottom-color: var(--color-primary);
+  background: rgba(233, 30, 140, 0.07);
+}
+
+/* ── Tab badge (done/total) ── */
+.tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  padding: 2px 7px;
+  background: rgba(255, 255, 255, 0.10);
+  border-radius: var(--radius-pill);
+  font-size: 0.70rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--color-text-muted);
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.tab-btn.active .tab-badge {
+  background: rgba(233, 30, 140, 0.22);
+  color: var(--color-primary-light);
+}
+
+/* ── Tab panels container ── */
+.tab-panels {
+  position: relative;
+  min-height: 200px;
+}
+
+/* ── Individual panel ── */
+.tab-panel {
+  display: none;
+  opacity: 0;
+}
+
+.tab-panel.active {
+  display: block;
+  animation: tabFadeIn var(--transition-base) forwards;
+}
+
+@keyframes tabFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+
+/* ── Panel inner header row (filters + add button) ── */
+.tab-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+/* ── Filter button group ── */
+.filter-group {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  padding: 5px 14px;
+  font-size: 0.79rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.filter-btn:hover {
+  color: var(--color-text);
+  background: rgba(255, 255, 255, 0.10);
+}
+
+.filter-btn.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+
+/* ═══════════════════════════════════════
+   PAYLAŞILAN FORM BİLEŞENLERİ
+   (watchlist + dreams formlarında ortak)
+════════════════════════════════════════ */
+
+/* Select */
+.form-select {
+  width: 100%;
+  padding: 10px 15px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: 0.9rem;
+  font-family: var(--font-ui);
+  outline: none;
+  color-scheme: dark;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.form-select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(233, 30, 140, 0.2);
+}
+
+/* Radio group */
+.radio-group {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.radio-opt {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--color-text);
+  user-select: none;
+}
+
+.radio-opt input[type="radio"] {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Checkbox label */
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--color-text);
+  user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Range / progress slider */
+.progress-slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.15);
+  outline: none;
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+.progress-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  cursor: pointer;
+  box-shadow: 0 0 6px rgba(233, 30, 140, 0.5);
+}
+
+.progress-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  cursor: pointer;
+  border: none;
+}
+
+/* Star picker (watchlist form) */
+.star-picker {
+  display: flex;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.star-opt {
+  font-size: 1.7rem;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  opacity: 0.35;
+  user-select: none;
+  line-height: 1;
+  transition:
+    color var(--transition-fast),
+    opacity var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.star-opt:hover  { transform: scale(1.15); }
+
+.star-opt.hovered,
+.star-opt.selected {
+  color: #ffc107;
+  opacity: 1;
+}
+
+/* ── Day mode overrides ── */
+body.day-mode .form-select {
+  background: rgba(233, 30, 140, 0.05);
+  color: #3d0f25;
+  color-scheme: light;
+}
+
+body.day-mode .tab-btn {
+  color: rgba(61, 15, 37, 0.55);
+}
+
+body.day-mode .tab-btn:hover {
+  color: #3d0f25;
+  background: rgba(233, 30, 140, 0.06);
+}
+
+body.day-mode .tab-btn.active {
+  color: var(--color-primary);
+  background: rgba(233, 30, 140, 0.09);
+}
+
+body.day-mode .tab-badge {
+  background: rgba(233, 30, 140, 0.10);
+  color: rgba(61, 15, 37, 0.6);
+}
+
+body.day-mode .tab-btn.active .tab-badge {
+  background: rgba(233, 30, 140, 0.22);
+  color: var(--color-primary);
+}
+
+body.day-mode .filter-btn {
+  color: rgba(61, 15, 37, 0.6);
+}
+
+body.day-mode .filter-btn:hover {
+  color: #3d0f25;
+  background: rgba(233, 30, 140, 0.07);
+}
+
+body.day-mode .radio-opt,
+body.day-mode .checkbox-label {
+  color: #3d0f25;
+}
+
+body.day-mode .progress-slider {
+  background: rgba(61, 15, 37, 0.12);
+}
+
+/* ── Mobile ── */
+@media (max-width: 600px) {
+  .tab-btn {
+    padding: 8px 12px;
+    font-size: 0.78rem;
+    gap: 5px;
+  }
+
+  .tab-panel-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .filter-btn {
+    padding: 4px 11px;
+    font-size: 0.75rem;
+  }
+}

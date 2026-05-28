@@ -1,0 +1,268 @@
+/* ═══════════════════════════════════════════════════
+   dreams.css — Hayallerimiz sekmesi
+════════════════════════════════════════════════════ */
+
+/* ── Add button ── */
+.btn-add-dream {
+  padding: 8px 22px;
+  background: var(--color-primary);
+  border: none;
+  border-radius: var(--radius-pill);
+  color: #fff;
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition:
+    background var(--transition-fast),
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.btn-add-dream:hover {
+  background: var(--color-accent);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-glow);
+}
+
+/* ── Grid ── */
+.dreams-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+/* ── Empty state ── */
+.dreams-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  padding: 48px 0;
+  font-style: italic;
+}
+
+/* ═══════════════════════════════════════
+   KART
+════════════════════════════════════════ */
+.dream-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+  transition:
+    transform var(--transition-base),
+    box-shadow var(--transition-base),
+    border-color var(--transition-base),
+    opacity var(--transition-base);
+}
+
+.dream-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-glow);
+  border-color: rgba(233, 30, 140, 0.30);
+}
+
+.dream-card.status-tamamlandi {
+  border-color: rgba(76, 175, 80, 0.38);
+}
+
+/* ── Kart başlığı (badge'ler + aksiyon butonları) ── */
+.dream-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Kategori badge */
+.dream-cat-badge {
+  padding: 2px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.dream-cat-badge.beceri {
+  background: rgba(123, 31, 162, 0.70);
+  color: #e1bee7;
+}
+
+.dream-cat-badge.egitim {
+  background: rgba(13, 71, 161, 0.70);
+  color: #bbdefb;
+}
+
+/* Durum badge */
+.dream-status-badge {
+  padding: 2px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.dream-status-badge.hayal {
+  background: rgba(94, 92, 158, 0.55);
+  color: #d5d4f0;
+}
+
+.dream-status-badge.planlandi {
+  background: rgba(21, 101, 192, 0.60);
+  color: #bbdefb;
+}
+
+.dream-status-badge.devam {
+  background: rgba(230, 81, 0, 0.55);
+  color: #ffe0b2;
+}
+
+.dream-status-badge.tamamlandi {
+  background: rgba(46, 125, 50, 0.60);
+  color: #c8e6c9;
+}
+
+/* Aksiyon butonları */
+.dream-card-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.dream-card:hover .dream-card-actions {
+  opacity: 1;
+}
+
+.dream-action-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background: rgba(16, 5, 13, 0.65);
+  border: 1px solid var(--color-border);
+  font-size: 0.78rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+}
+
+.dream-action-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  transform: scale(1.12);
+}
+
+/* ── Başlık ── */
+.dream-card-title {
+  font-family: var(--font-main);
+  font-size: 1rem;
+  color: var(--color-text);
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.dream-card.status-tamamlandi .dream-card-title {
+  text-decoration: line-through;
+  color: var(--color-text-muted);
+}
+
+/* ── Açıklama ── */
+.dream-card-desc {
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ── Progress section ── */
+.dream-progress-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.dream-progress-track {
+  flex: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+.dream-progress-fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, var(--color-primary), var(--color-primary-light));
+  transition: width var(--transition-base);
+}
+
+.dream-card.status-tamamlandi .dream-progress-fill {
+  background: linear-gradient(90deg, #2e7d32, #4caf50);
+}
+
+.dream-progress-pct {
+  font-size: 0.74rem;
+  color: var(--color-text-muted);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  flex-shrink: 0;
+  min-width: 32px;
+  text-align: right;
+}
+
+/* ── Ekleyen ── */
+.dream-added-by {
+  font-size: 0.70rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+  margin-top: auto;
+}
+
+/* ── Day mode ── */
+body.day-mode .dream-cat-badge.beceri {
+  background: rgba(149, 117, 205, 0.30);
+  color: #4a148c;
+}
+
+body.day-mode .dream-cat-badge.egitim {
+  background: rgba(100, 141, 208, 0.25);
+  color: #0d47a1;
+}
+
+body.day-mode .dream-action-btn {
+  background: rgba(61, 15, 37, 0.12);
+}
+
+body.day-mode .dream-action-btn:hover {
+  background: rgba(61, 15, 37, 0.22);
+}
+
+body.day-mode .dream-progress-track {
+  background: rgba(61, 15, 37, 0.12);
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .dreams-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+}

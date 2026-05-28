@@ -123,12 +123,15 @@
     /* Modüller — async init, fire-and-forget (kendi içlerinde hata yönetirler) */
     counter.init();
     player.init();
+    tabs.init();
     bucket.init();
     memories.init();
     timeline.init();
     announcements.init();
     quotes.init();
     mapModule.init();
+    watchlist.init();
+    dreams.init();
 
     /* Kayan kalpler */
     startFloatingHearts();

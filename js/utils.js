@@ -16,9 +16,11 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 /* Hangi storage anahtarının hangi tabloya gittiği.
    Listede olmayan anahtarlar app_settings tablosuna gider. */
 const _KEY_TABLE = {
-  'love_memories': 'memories',
-  'love_bucket':   'bucket',
-  'announcements': 'announcements',
+  'love_memories':  'memories',
+  'love_bucket':    'bucket',
+  'announcements':  'announcements',
+  'love_watchlist': 'watchlist',
+  'love_dreams':    'dreams',
 };
 
 /* Session anahtarı her zaman localStorage'da kalır (auth sync gereksinimi). */
