@@ -7,6 +7,8 @@
 const memories = (function () {
 
   const STORAGE_KEY = 'love_memories';
+  const HOME_LIMIT  = 5;
+
   let cards      = [];
   let editingId  = null;
 
@@ -22,6 +24,9 @@ const memories = (function () {
   let miniMap               = null;
   let miniMapMarker         = null;
   let pendingLocationCoords = null;
+
+  /* Tüm Anılar modal durumu */
+  let _allMemoriesOpen = false;
 
   /* ── Persistence ─────────────────────────────────── */
 
@@ -125,21 +130,38 @@ const memories = (function () {
   /* ── Rendering ───────────────────────────────────── */
 
   function renderCards() {
-    const track = document.getElementById('memoriesTrack');
-    if (!track) return;
-    track.innerHTML = '';
+    const grid = document.getElementById('memoriesGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    const footer = document.getElementById('memoriesFooter');
 
     if (!cards.length) {
       const empty = document.createElement('p');
       empty.className   = 'memories-empty';
       empty.textContent = 'Henüz anı yok — ilk anını ekle!';
-      track.appendChild(empty);
+      grid.appendChild(empty);
+      if (footer) footer.hidden = true;
       return;
     }
 
+    const preview = cards.slice(0, HOME_LIMIT);
+    const frag = document.createDocumentFragment();
+    preview.forEach(c => frag.appendChild(createCardEl(c)));
+    grid.appendChild(frag);
+
+    if (footer) footer.hidden = cards.length <= HOME_LIMIT;
+
+    if (_allMemoriesOpen) renderAllMemoriesGrid();
+  }
+
+  function renderAllMemoriesGrid() {
+    const grid = document.getElementById('allMemoriesGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
     const frag = document.createDocumentFragment();
     cards.forEach(c => frag.appendChild(createCardEl(c)));
-    track.appendChild(frag);
+    grid.appendChild(frag);
   }
 
   /* ── Delete ──────────────────────────────────────── */
@@ -213,6 +235,22 @@ const memories = (function () {
 
   function closeLightbox() {
     document.getElementById('lightboxOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  /* ── Tüm Anılar Modal ────────────────────────────── */
+
+  function openAllMemoriesModal() {
+    _allMemoriesOpen = true;
+    renderAllMemoriesGrid();
+    document.getElementById('allMemoriesModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    document.getElementById('closeAllMemories').focus();
+  }
+
+  function closeAllMemoriesModal() {
+    _allMemoriesOpen = false;
+    document.getElementById('allMemoriesModal').classList.remove('open');
     document.body.style.overflow = '';
   }
 
@@ -435,6 +473,9 @@ const memories = (function () {
     document.getElementById('lightboxPrev').addEventListener('click', lbPrev);
     document.getElementById('lightboxNext').addEventListener('click', lbNext);
 
+    document.getElementById('btnAllMemories').addEventListener('click', openAllMemoriesModal);
+    document.getElementById('closeAllMemories').addEventListener('click', closeAllMemoriesModal);
+
     const locCheckbox = document.getElementById('memoryAddLocation');
     const locFields   = document.getElementById('locationExtraFields');
     if (locCheckbox && locFields) {
@@ -449,13 +490,16 @@ const memories = (function () {
       });
     }
 
-    const lbOverlay  = document.getElementById('lightboxOverlay');
-    const addOverlay = document.getElementById('addMemoryModal');
-    lbOverlay.addEventListener('click',  e => { if (e.target === lbOverlay)  closeLightbox();  });
-    addOverlay.addEventListener('click', e => { if (e.target === addOverlay) closeAddModal(); });
+    const lbOverlay      = document.getElementById('lightboxOverlay');
+    const addOverlay     = document.getElementById('addMemoryModal');
+    const allMemOverlay  = document.getElementById('allMemoriesModal');
+
+    lbOverlay.addEventListener('click',     e => { if (e.target === lbOverlay)     closeLightbox();        });
+    addOverlay.addEventListener('click',    e => { if (e.target === addOverlay)    closeAddModal();        });
+    allMemOverlay.addEventListener('click', e => { if (e.target === allMemOverlay) closeAllMemoriesModal(); });
 
     document.addEventListener('keydown', e => {
-      if (e.key === 'Escape')     { closeLightbox(); closeAddModal(); }
+      if (e.key === 'Escape')     { closeLightbox(); closeAddModal(); closeAllMemoriesModal(); }
       if (e.key === 'ArrowLeft')  lbPrev();
       if (e.key === 'ArrowRight') lbNext();
     });

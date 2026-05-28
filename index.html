@@ -125,8 +125,11 @@
           <button class="btn-add-memory" id="btnAddMemory" type="button">+ Anı Ekle</button>
         </div>
       </div>
-      <div class="memories-scroll-container">
-        <div class="memories-track" id="memoriesTrack"></div>
+      <div class="memories-grid-container">
+        <div class="memories-grid" id="memoriesGrid"></div>
+      </div>
+      <div class="memories-footer" id="memoriesFooter" hidden>
+        <button class="btn-all-memories" id="btnAllMemories" type="button">Tüm Anıları Gör</button>
       </div>
     </section>
 
@@ -253,6 +256,17 @@
         <p class="lightbox-date"  id="lightboxDate"></p>
         <p class="lightbox-counter" id="lightboxCounter"></p>
       </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       ALL MEMORIES MODAL
+  ════════════════════════════════════════ -->
+  <div class="modal-overlay all-memories-modal" id="allMemoriesModal" role="dialog" aria-modal="true" aria-label="Tüm Anılar">
+    <div class="modal-box all-memories-box">
+      <button class="modal-close" id="closeAllMemories" type="button" aria-label="Kapat">&#10005;</button>
+      <h3 class="modal-title">Tüm Anılar</h3>
+      <div class="all-memories-grid" id="allMemoriesGrid"></div>
     </div>
   </div>
 
