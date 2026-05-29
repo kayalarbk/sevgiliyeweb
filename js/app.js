@@ -27,7 +27,12 @@
 
   function applyBg(url) {
     const bgEl = document.getElementById('bgPhoto');
-    if (bgEl) bgEl.style.backgroundImage = 'url(' + url + ')';
+    if (!bgEl || !url) return;
+    /* Supabase CDN önbelleğini atla — sabit dosya adı her yüklemede cache'den gelir */
+    const src = url.startsWith('https://')
+      ? url.split('?')[0] + '?t=' + Date.now()
+      : url;
+    bgEl.style.backgroundImage = 'url(' + src + ')';
   }
 
   function setBgLoading(loading) {
