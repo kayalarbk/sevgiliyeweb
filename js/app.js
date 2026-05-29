@@ -23,24 +23,60 @@
 
   /* ── Arkaplan ──────────────────────────────────────── */
 
+  let _bgUploading = false;
+
   function applyBg(url) {
     const bgEl = document.getElementById('bgPhoto');
     if (bgEl) bgEl.style.backgroundImage = 'url(' + url + ')';
   }
 
+  function setBgLoading(loading) {
+    const label = document.querySelector('.bg-upload-label');
+    if (!label) return;
+    label.style.opacity       = loading ? '0.45' : '';
+    label.style.pointerEvents = loading ? 'none'  : '';
+  }
+
   function handleBgUpload(e) {
+    if (_bgUploading) return;
     const file = e.target.files[0];
-    if (!file) return;
+    e.target.value = ''; /* Aynı dosya tekrar seçilebilsin */
+    if (!file || !file.type.startsWith('image/')) return;
+
+    _bgUploading = true;
+    setBgLoading(true);
+
     const reader = new FileReader();
+
     reader.onload = async function (ev) {
-      const dataUrl = await compressImage(ev.target.result, BG_COMPRESS_PX, BG_COMPRESS_QUALITY);
-      applyBg(dataUrl); /* Anında göster */
-      const url = await uploadPhoto(dataUrl, 'bg/background.jpg');
-      await storage.setRaw(BG_KEY, url);
-      if (url !== dataUrl) applyBg(url);
+      try {
+        const dataUrl = await compressImage(ev.target.result, BG_COMPRESS_PX, BG_COMPRESS_QUALITY);
+        applyBg(dataUrl); /* Sıkıştırılmış görsel anında göster */
+
+        /* 10 saniyelik timeout: aşılırsa dataUrl'i fallback olarak kullan */
+        const url = await Promise.race([
+          uploadPhoto(dataUrl, 'bg/background.jpg'),
+          new Promise(resolve => setTimeout(() => resolve(dataUrl), 10000))
+        ]);
+
+        try { await storage.setRaw(BG_KEY, url); } catch (_) {}
+
+        if (url !== dataUrl) applyBg(url);
+      } catch (err) {
+        console.error('Arka plan güncellenemedi:', err);
+      } finally {
+        _bgUploading = false;
+        setBgLoading(false);
+      }
     };
+
+    reader.onerror = function () {
+      console.error('Dosya okunamadı');
+      _bgUploading = false;
+      setBgLoading(false);
+    };
+
     reader.readAsDataURL(file);
-    e.target.value = '';
   }
 
   /* ── Kayan kalpler ─────────────────────────────────── */
