@@ -132,9 +132,6 @@
 }
 .leaflet-popup-close-button:hover { color: var(--color-text) !important; }
 
-/* Day mode Leaflet popup */
-body.day-mode .leaflet-popup-content-wrapper { color: #3d0f25 !important; }
-
 /* ── Map popup card ── */
 .map-popup {
   min-width: 200px;
@@ -213,11 +210,6 @@ body.day-mode .leaflet-popup-content-wrapper { color: #3d0f25 !important; }
   color: rgba(255,255,255,0.6) !important;
 }
 .leaflet-control-attribution a { color: rgba(255,255,255,0.7) !important; }
-body.day-mode .leaflet-control-attribution {
-  background: rgba(255,255,255,0.75) !important;
-  color: rgba(61,15,37,0.7) !important;
-}
-
 /* ── Responsive ── */
 @media (max-width: 600px) {
   .main-leaflet-map { height: 260px; }

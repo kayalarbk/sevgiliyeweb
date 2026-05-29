@@ -236,29 +236,6 @@
   margin-top: auto;
 }
 
-/* ── Day mode ── */
-body.day-mode .dream-cat-badge.beceri {
-  background: rgba(149, 117, 205, 0.30);
-  color: #4a148c;
-}
-
-body.day-mode .dream-cat-badge.egitim {
-  background: rgba(100, 141, 208, 0.25);
-  color: #0d47a1;
-}
-
-body.day-mode .dream-action-btn {
-  background: rgba(61, 15, 37, 0.12);
-}
-
-body.day-mode .dream-action-btn:hover {
-  background: rgba(61, 15, 37, 0.22);
-}
-
-body.day-mode .dream-progress-track {
-  background: rgba(61, 15, 37, 0.12);
-}
-
 /* ── Responsive ── */
 @media (max-width: 600px) {
   .dreams-grid {

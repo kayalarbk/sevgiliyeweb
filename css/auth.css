@@ -239,21 +239,6 @@
   margin-top: 3px;
 }
 
-/* ── Day-mode overrides: overlay her zaman koyu, metin hep açık ── */
-body.day-mode .login-title,
-body.day-mode .login-subtitle,
-body.day-mode .login-label,
-body.day-mode .login-input {
-  color: #fff5f9;
-}
-body.day-mode .login-input {
-  background: rgba(255, 255, 255, 0.14);
-  border-color: rgba(255, 255, 255, 0.28);
-}
-body.day-mode .login-input::placeholder {
-  color: rgba(255, 245, 249, 0.65);
-}
-
 /* ── Responsive ── */
 @media (max-width: 480px) {
   .login-card {

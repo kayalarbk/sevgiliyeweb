@@ -13,7 +13,6 @@
 (function () {
 
   const BG_KEY              = 'love_bg';
-  const THEME_KEY           = 'love_theme';
   const BG_COMPRESS_PX      = 1920;
   const BG_COMPRESS_QUALITY = 0.80;
   const NAV_HEIGHT          = 56;
@@ -42,26 +41,6 @@
     };
     reader.readAsDataURL(file);
     e.target.value = '';
-  }
-
-  /* ── Gece / Gündüz modu ────────────────────────────── */
-
-  function applyTheme(theme) {
-    const btn = document.getElementById('themeToggle');
-    if (theme === 'day') {
-      document.body.classList.add('day-mode');
-      if (btn) btn.textContent = '☀️';
-    } else {
-      document.body.classList.remove('day-mode');
-      if (btn) btn.textContent = '🌙';
-    }
-  }
-
-  async function toggleTheme() {
-    const isDay    = document.body.classList.contains('day-mode');
-    const newTheme = isDay ? 'night' : 'day';
-    await storage.setRaw(THEME_KEY, newTheme);
-    applyTheme(newTheme);
   }
 
   /* ── Kayan kalpler ─────────────────────────────────── */
@@ -113,12 +92,6 @@
 
     const bgInput = document.getElementById('bgUpload');
     if (bgInput) bgInput.addEventListener('change', handleBgUpload);
-
-    /* Tema */
-    const savedTheme = (await storage.getRaw(THEME_KEY)) || 'night';
-    applyTheme(savedTheme);
-    const themeBtn = document.getElementById('themeToggle');
-    if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
 
     /* Modüller — async init, fire-and-forget (kendi içlerinde hata yönetirler) */
     counter.init();

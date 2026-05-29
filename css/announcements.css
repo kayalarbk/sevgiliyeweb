@@ -455,30 +455,6 @@
   opacity: 0.85;
 }
 
-/* ── Day-mode overrides ── */
-body.day-mode .ann-priority-badge--important { background: rgba(245, 158, 11, 0.12); }
-body.day-mode .ann-priority-badge--urgent    { background: rgba(239, 68, 68, 0.12); }
-body.day-mode .ann-emoji-btn                 { background: rgba(0,0,0,0.04); }
-body.day-mode .ann-emoji-btn--selected       { background: rgba(233, 30, 140, 0.12); }
-body.day-mode .ann-priority-opt span         { background: rgba(0,0,0,0.05); }
-
-body.day-mode .announcements-overlay {
-  background: rgba(255, 248, 250, 0.97);
-}
-
-body.day-mode .announcements-header {
-  background: rgba(255, 248, 250, 0.92);
-}
-
-body.day-mode .announcements-add-section {
-  background: rgba(255, 248, 250, 0.88);
-}
-
-body.day-mode .announcements-add-input,
-body.day-mode .announcements-add-textarea {
-  color: var(--color-text);
-}
-
 /* ── Responsive ── */
 @media (max-width: 600px) {
   .announcements-overlay {
