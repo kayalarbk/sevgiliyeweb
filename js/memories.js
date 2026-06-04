@@ -7,7 +7,7 @@
 const memories = (function () {
 
   const STORAGE_KEY = 'love_memories';
-  const HOME_LIMIT  = 5;
+  const HOME_LIMIT  = 15;
 
   let cards      = [];
   let editingId  = null;
