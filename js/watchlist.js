@@ -269,7 +269,10 @@ const watchlist = (function () {
 
   function subscribeRealtime() {
     supabaseClient.channel('watchlist-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'watchlist' },
+      .on('postgres_changes', {
+          event: '*', schema: 'public', table: 'app_settings',
+          filter: 'key=eq.love_watchlist'
+        },
         async () => {
           if (Date.now() - _lastSaveMs < REALTIME_GRACE) return;
           await load();

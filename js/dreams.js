@@ -241,7 +241,10 @@ const dreams = (function () {
 
   function subscribeRealtime() {
     supabaseClient.channel('dreams-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'dreams' },
+      .on('postgres_changes', {
+          event: '*', schema: 'public', table: 'app_settings',
+          filter: 'key=eq.love_dreams'
+        },
         async () => {
           if (Date.now() - _lastSaveMs < REALTIME_GRACE) return;
           await load();
