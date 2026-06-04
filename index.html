@@ -21,6 +21,7 @@
   <link rel="stylesheet" href="css/tabs.css" />
   <link rel="stylesheet" href="css/watchlist.css" />
   <link rel="stylesheet" href="css/dreams.css" />
+  <link rel="stylesheet" href="css/gallery.css" />
 </head>
 <body>
 
@@ -72,6 +73,7 @@
       <a class="nav-link" href="#memoriesSection">Anılar</a>
       <a class="nav-link" href="#bucketSection">Planlar</a>
       <a class="nav-link" href="#mapSection">Harita</a>
+      <a class="nav-link" href="#gallerySection">Galeri</a>
     </nav>
     <div class="nav-actions">
       <span class="nav-username" id="navUsername"></span>
@@ -212,6 +214,14 @@
         📍 Haritada konum seçmek için tıklayın &nbsp;—&nbsp; <kbd>Esc</kbd> ile iptal
       </div>
       <div id="mainLeafletMap" class="main-leaflet-map"></div>
+    </section>
+
+    <!-- ── GALLERY SECTION ── -->
+    <section class="section-gallery" id="gallerySection">
+      <div class="gallery-section-header">
+        <h2 class="section-title">Galerimiz</h2>
+      </div>
+      <div class="gallery-stage" id="galleryStage"></div>
     </section>
 
   </main>
@@ -602,6 +612,7 @@
   <script src="js/map.js"></script>
 <script src="js/announcements.js"></script>
 <script src="js/timeline.js"></script>
+  <script src="js/gallery.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
