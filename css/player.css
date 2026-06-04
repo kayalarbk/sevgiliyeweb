@@ -24,12 +24,14 @@
 
 .bb-credit {
   font-family: var(--font-main);
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-style: italic;
   color: var(--color-text-muted);
-  letter-spacing: 0.07em;
+  letter-spacing: 0.04em;
   user-select: none;
   opacity: 0.85;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .bb-btn {
