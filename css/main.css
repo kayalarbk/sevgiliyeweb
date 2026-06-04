@@ -13,17 +13,17 @@
   --color-accent-soft:    #fbcfe8;
 
   /* Background / surface */
-  --color-bg:             #0d0d0d;
-  --color-surface:        #1c1014;
-  --color-surface-solid:  #1c1014;
-  --color-overlay:        rgba(5, 0, 3, 0.58);
+  --color-bg:             #e8c8d6;
+  --color-surface:        #8a3352;
+  --color-surface-solid:  #b04b6e;
+  --color-overlay:        rgba(14, 1, 9, 0.28);
 
   /* Text */
-  --color-text:           #f472b6;
-  --color-text-muted:     #fda4c8;
+  --color-text:           #f9a8d4;
+  --color-text-muted:     #fecdd3;
 
   /* Borders */
-  --color-border:         rgba(244, 114, 182, 0.25);
+  --color-border:         rgba(244, 114, 182, 0.28);
 
   /* Typography */
   --font-main:  'Georgia', 'Times New Roman', serif;
@@ -36,7 +36,7 @@
   --radius-pill: 999px;
 
   /* Elevation */
-  --shadow-soft: 0 4px 28px rgba(0, 0, 0, 0.45);
+  --shadow-soft: 0 4px 28px rgba(215, 150, 150, 0.45);
   --shadow-glow: 0 0 28px rgba(244, 114, 182, 0.35);
   --text-shadow-readable: 0 1px 8px rgba(0, 0, 0, 0.65);
 
@@ -124,8 +124,8 @@ h1, h2, h3 { line-height: 1.2; }
   z-index: var(--z-bg);
   pointer-events: none;
   transition: background var(--transition-slow);
-  backdrop-filter: brightness(0.88) saturate(0.9);
-  -webkit-backdrop-filter: brightness(0.88) saturate(0.9);
+  backdrop-filter: brightness(0.97) saturate(0.92);
+  -webkit-backdrop-filter: brightness(0.97) saturate(0.92);
 }
 
 /* ── Nav header ── */
@@ -138,7 +138,7 @@ h1, h2, h3 { line-height: 1.2; }
   align-items: center;
   justify-content: space-between;
   padding: 0 20px;
-  background: rgba(13, 13, 13, 0.92);
+  background: rgba(28, 8, 18, 0.88);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
   border-bottom: 1px solid var(--color-border);
@@ -268,7 +268,7 @@ h1, h2, h3 { line-height: 1.2; }
 .form-textarea {
   width: 100%;
   padding: 10px 15px;
-  background: #2a1020;
+  background: #5c2240;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   color: var(--color-text-muted);
@@ -403,7 +403,7 @@ h1, h2, h3 { line-height: 1.2; }
   .app-nav {
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
-    background: rgba(13, 13, 13, 0.98);
+    background: rgba(28, 8, 18, 0.97);
   }
 
   /* nav-links: header'dan çıkar, altta sabit tab bar'a dönüştür */
@@ -420,7 +420,7 @@ h1, h2, h3 { line-height: 1.2; }
     align-items: stretch;
     gap: 0;
     padding: 0;
-    background: rgba(13, 13, 13, 0.96);
+    background: rgba(28, 8, 18, 0.95);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
     border-top: 1px solid var(--color-border);
