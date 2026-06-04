@@ -2,46 +2,10 @@
    quotes.css — Fixed bottom-right romantic quote widget
 ════════════════════════════════════════════════════ */
 
-/* ── Toggle button ── */
-.quotes-toggle-btn {
-  position: fixed;
-  bottom: 16px;
-  right: 16px;
-  z-index: var(--z-quotes);
-  width: 42px;
-  height: 42px;
-  border-radius: var(--radius-pill);
-  background: rgba(16, 5, 13, 0.82);
-  border: 1px solid var(--color-border);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  box-shadow: var(--shadow-soft);
-  color: var(--color-primary-light);
-  font-size: 1.1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition:
-    background var(--transition-fast),
-    transform var(--transition-fast),
-    box-shadow var(--transition-fast),
-    bottom var(--transition-base);
-}
-
-body.player-visible .quotes-toggle-btn {
-  bottom: 148px;
-}
-
-.quotes-toggle-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
-  transform: scale(1.12);
-  box-shadow: var(--shadow-glow);
-}
-
 /* ── Widget container ── */
 .quotes-widget {
   position: fixed;
-  bottom: 66px;
+  bottom: 60px;
   right: 16px;
   z-index: var(--z-quotes);
   width: clamp(210px, 26vw, 300px);
@@ -65,7 +29,7 @@ body.player-visible .quotes-toggle-btn {
 }
 
 body.player-visible .quotes-widget {
-  bottom: 172px;
+  bottom: 210px;
 }
 
 .quotes-widget.quotes-hidden {
@@ -124,11 +88,8 @@ body.player-visible .quotes-widget {
 
 /* ── Mobile: expand to full width just above player ── */
 @media (max-width: 480px) {
-  body.player-visible .quotes-toggle-btn {
-    bottom: 148px;
-  }
   body.player-visible .quotes-widget {
-    bottom: 180px;
+    bottom: 220px;
   }
   .quotes-widget {
     width: calc(100vw - 32px);

@@ -463,30 +463,31 @@ h1, h2, h3 { line-height: 1.2; }
   .nav-link[href="#counterSection"]::before  { content: "❤️"; }
   .nav-link[href="#memoriesSection"]::before { content: "📷"; }
   .nav-link[href="#bucketSection"]::before   { content: "⭐"; }
+  .nav-link[href="#gallerySection"]::before  { content: "🖼️"; }
   .nav-link[href="#mapSection"]::before      { content: "📍"; }
 
-  /* ── Player bar: tab bar'ın üstüne çık ──────────────
-     player.css'den sonra yüklenen main.css için !important
-     gereklidir (aynı özgüllük, ama cascade sırası nedeniyle). */
+  /* Bottom bar: tab bar'ın üstünde, daha ince */
+  .bottom-bar {
+    bottom: 56px;
+    height: 44px;
+    padding: 0 16px;
+  }
+
+  .bb-credit {
+    display: none;
+  }
+
+  /* Player bar: tab bar + bottom bar'ın üstüne çık */
   .player-bar {
-    bottom: 60px !important;
+    bottom: 100px !important;
   }
 
-  /* Player toggle butonu: tab bar'ın üstünde */
-  body > .player-toggle-btn {
-    bottom: 76px;
-  }
-
-  body.player-visible .player-toggle-btn {
-    bottom: 224px !important;
-  }
-
-  /* Body padding-bottom: tab bar + içerik boşluğu */
+  /* Body padding-bottom: tab bar + bottom bar + içerik boşluğu */
   body {
     padding-bottom: 160px;
   }
 
   body.player-visible {
-    padding-bottom: calc(60px + 148px) !important; /* 208px */
+    padding-bottom: calc(100px + 148px) !important; /* 248px */
   }
 }

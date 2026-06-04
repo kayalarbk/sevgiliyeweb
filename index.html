@@ -476,7 +476,6 @@
   <!-- ═══════════════════════════════════════
        QUOTES WIDGET (fixed bottom-right)
   ════════════════════════════════════════ -->
-  <button class="quotes-toggle-btn" id="btnToggleQuotes" type="button" aria-label="Romantik alıntılar">&#10084;</button>
   <aside class="quotes-widget quotes-hidden" id="quotesWidget" aria-label="Romantik alıntı">
     <div class="quote-text-wrapper">
       <p class="quote-text" id="quoteText"></p>
@@ -487,7 +486,6 @@
   <!-- ═══════════════════════════════════════
        MUSIC PLAYER (fixed bottom bar)
   ════════════════════════════════════════ -->
-  <button class="player-toggle-btn" id="btnTogglePlayer" type="button" aria-label="Müzik çalara aç/kapat">&#9835;</button>
   <footer class="player-bar player-hidden" id="playerBar" role="region" aria-label="Müzik çalar">
 
     <!-- Track selector -->
@@ -517,6 +515,15 @@
 
     <audio id="audioElement" preload="metadata"></audio>
   </footer>
+
+  <!-- ═══════════════════════════════════════
+       BOTTOM BAR (sabit)
+  ════════════════════════════════════════ -->
+  <div class="bottom-bar" id="bottomBar">
+    <button class="bb-btn" id="btnTogglePlayer" type="button" aria-label="Müzik çalara aç/kapat">&#9835;</button>
+    <span class="bb-credit">Barış Kaya eseri</span>
+    <button class="bb-btn" id="btnToggleQuotes" type="button" aria-label="Romantik alıntılar">&#10084;</button>
+  </div>
 
   <!-- ═══════════════════════════════════════
        FOOTER
