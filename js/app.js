@@ -156,8 +156,8 @@
       document.getElementById('counterSection'),
       document.getElementById('memoriesSection'),
       document.getElementById('bucketSection'),
-      document.getElementById('mapSection'),
       document.getElementById('gallerySection'),
+      document.getElementById('mapSection'),
     ].filter(Boolean);
 
     const navLinks = document.querySelectorAll('.nav-link');
