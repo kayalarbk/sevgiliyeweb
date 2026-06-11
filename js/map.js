@@ -46,7 +46,8 @@ const mapModule = (function () {
   async function save() {
     _lastSaveMs = Date.now();
     const ok = await storage.set(STORAGE_KEY, locations);
-    if (!ok) alert('Konum kaydedilemedi.');
+    if (!ok) showToast('Konum kaydedilemedi.', 'error');
+    return ok;
   }
 
   /* ── Heart icon ──────────────────────────────────── */
@@ -192,7 +193,7 @@ const mapModule = (function () {
     const name = document.getElementById('markerName').value.trim();
     if (!name) { document.getElementById('markerName').focus(); return; }
     if (!pendingLatlng) {
-      alert('Lütfen önce haritada bir konum seçin (+ Konum Ekle butonuna tıklayın).');
+      showToast('Lütfen önce haritada bir konum seçin.', 'info');
       return;
     }
 
@@ -217,6 +218,7 @@ const mapModule = (function () {
       await addLocationInternal(loc);
       setButtonLoading(submitBtn, false);
       closeMarkerModal();
+      showToast('Konum eklendi 📍', 'success');
       openMapMemoryConfirm();
     };
 

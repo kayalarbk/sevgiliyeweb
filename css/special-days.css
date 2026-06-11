@@ -1,0 +1,123 @@
+/* ═══════════════════════════════════════════════════
+   special-days.css — Yaklaşan özel günler kartları
+════════════════════════════════════════════════════ */
+
+.special-days {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+}
+
+.sd-heading {
+  font-size: 0.74rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  text-shadow: var(--text-shadow-readable);
+}
+
+.sd-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.sd-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 230px;
+  padding: 12px 18px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  backdrop-filter: blur(14px);
+  box-shadow: var(--shadow-soft);
+  text-align: left;
+  transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base);
+}
+
+.sd-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-glow);
+  border-color: rgba(233, 30, 140, 0.35);
+}
+
+.sd-card--today {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-glow);
+  animation: sd-pulse 2.2s ease-in-out infinite;
+}
+
+@keyframes sd-pulse {
+  0%, 100% { box-shadow: 0 0 18px rgba(244, 114, 182, 0.30); }
+  50%      { box-shadow: 0 0 34px rgba(244, 114, 182, 0.60); }
+}
+
+.sd-emoji {
+  font-size: 1.6rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.sd-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.sd-title {
+  font-family: var(--font-main);
+  font-size: 0.92rem;
+  color: var(--color-primary-light);
+  white-space: nowrap;
+}
+
+.sd-date {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  letter-spacing: 0.03em;
+}
+
+.sd-count {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  min-width: 58px;
+}
+
+.sd-count strong {
+  font-family: 'Playfair Display', var(--font-main);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-primary-light);
+  line-height: 1;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.sd-count small {
+  font-size: 0.58rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-top: 3px;
+}
+
+.sd-count--today {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--color-primary-light);
+}
+
+/* ── Mobil ── */
+@media (max-width: 600px) {
+  .sd-row { flex-direction: column; align-items: stretch; }
+  .sd-card { min-width: 0; }
+}

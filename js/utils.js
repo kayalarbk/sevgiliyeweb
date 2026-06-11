@@ -287,6 +287,37 @@ function setButtonLoading(btn, loading) {
 }
 
 /* ─────────────────────────────────────────────────────
+   Konfeti — kutlama animasyonu (dreams, special-days)
+───────────────────────────────────────────────────── */
+function spawnConfetti() {
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  const colors = [
+    '#e91e8c', '#f48fb1', '#ffc107', '#4caf50',
+    '#2196f3', '#ff9800', '#9c27b0', '#00bcd4',
+  ];
+  const count = 80;
+  for (let i = 0; i < count; i++) {
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.className = 'confetti-particle';
+      const size = (5 + Math.random() * 8).toFixed(1) + 'px';
+      el.style.cssText = [
+        `left:${(Math.random() * 100).toFixed(1)}vw`,
+        `width:${size}`,
+        `height:${size}`,
+        `background:${colors[Math.floor(Math.random() * colors.length)]}`,
+        `border-radius:${Math.random() > 0.4 ? '50%' : '2px'}`,
+        `animation-duration:${(0.9 + Math.random() * 1.4).toFixed(2)}s`,
+        `animation-delay:${(Math.random() * 0.4).toFixed(2)}s`,
+      ].join(';');
+      document.body.appendChild(el);
+      el.addEventListener('animationend', () => el.remove(), { once: true });
+    }, i * 18);
+  }
+}
+
+/* ─────────────────────────────────────────────────────
    URL doğrulama
 ───────────────────────────────────────────────────── */
 function isValidUrl(str) {

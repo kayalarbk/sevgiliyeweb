@@ -347,6 +347,27 @@ h1, h2, h3 { line-height: 1.2; }
   padding: 2px 0;
 }
 
+/* ── Scroll'da bölüm belirme (JS .reveal-on-scroll ekler) ── */
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 700ms ease, transform 700ms ease;
+}
+.reveal-on-scroll.revealed {
+  opacity: 1;
+  transform: none;
+}
+
+/* ── Hareket azaltma tercihi (erişilebilirlik) ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  html { scroll-behavior: auto; }
+}
+
 /* ── Confetti particles ── */
 .confetti-particle {
   position: fixed;

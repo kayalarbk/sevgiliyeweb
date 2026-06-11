@@ -1,7 +1,8 @@
 /**
  * dreams.js — Hayallerimiz listesi.
  *
- * escapeHtml, storage, supabaseClient → utils.js
+ * escapeHtml, storage, supabaseClient, spawnConfetti → utils.js
+ * showToast → toast.js
  * tabs.updateBadge → tabs.js
  * auth.getUser     → auth.js
  */
@@ -30,7 +31,8 @@ const dreams = (function () {
   async function save() {
     _lastSaveMs = Date.now();
     const ok = await storage.set(STORAGE_KEY, items);
-    if (!ok) alert('Kayıt başarısız. Lütfen tekrar dene.');
+    if (!ok) showToast('Kayıt başarısız. Lütfen tekrar dene.', 'error');
+    return ok;
   }
 
   /* ── Filtre ──────────────────────────────────────── */
@@ -38,34 +40,6 @@ const dreams = (function () {
   function getFiltered() {
     if (activeFilter === 'all') return items;
     return items.filter(it => it.status === activeFilter);
-  }
-
-  /* ── Konfeti ─────────────────────────────────────── */
-
-  function spawnConfetti() {
-    const colors = [
-      '#e91e8c', '#f48fb1', '#ffc107', '#4caf50',
-      '#2196f3', '#ff9800', '#9c27b0', '#00bcd4',
-    ];
-    const count = 80;
-    for (let i = 0; i < count; i++) {
-      setTimeout(() => {
-        const el = document.createElement('div');
-        el.className = 'confetti-particle';
-        const size = (5 + Math.random() * 8).toFixed(1) + 'px';
-        el.style.cssText = [
-          `left:${(Math.random() * 100).toFixed(1)}vw`,
-          `width:${size}`,
-          `height:${size}`,
-          `background:${colors[Math.floor(Math.random() * colors.length)]}`,
-          `border-radius:${Math.random() > 0.4 ? '50%' : '2px'}`,
-          `animation-duration:${(0.9 + Math.random() * 1.4).toFixed(2)}s`,
-          `animation-delay:${(Math.random() * 0.4).toFixed(2)}s`,
-        ].join(';');
-        document.body.appendChild(el);
-        el.addEventListener('animationend', () => el.remove(), { once: true });
-      }, i * 18);
-    }
   }
 
   /* ── Kart elementi ───────────────────────────────── */
@@ -153,8 +127,9 @@ const dreams = (function () {
   async function deleteItem(id) {
     if (!confirm('Bu hayali silmek istiyor musun?')) return;
     items = items.filter(it => it.id !== id);
-    await save();
+    const ok = await save();
     render();
+    if (ok) showToast('Hayal silindi.', 'info');
   }
 
   /* ── Add / Edit modal ────────────────────────────── */
@@ -229,10 +204,12 @@ const dreams = (function () {
     }
 
     const shouldConfetti = status === 'tamamlandi' && prevStatus !== 'tamamlandi';
+    const isEdit         = editingId !== null;
 
-    save().then(() => {
+    save().then(ok => {
       render();
       closeModal();
+      if (ok) showToast(isEdit ? 'Hayal güncellendi ♥' : 'Hayal eklendi ♥', 'success');
       if (shouldConfetti) spawnConfetti();
     });
   }

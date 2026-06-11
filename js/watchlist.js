@@ -24,7 +24,8 @@ const watchlist = (function () {
   async function save() {
     _lastSaveMs = Date.now();
     const ok = await storage.set(STORAGE_KEY, items);
-    if (!ok) alert('Kayıt başarısız. Lütfen tekrar dene.');
+    if (!ok) showToast('Kayıt başarısız. Lütfen tekrar dene.', 'error');
+    return ok;
   }
 
   /* ── Filtre ──────────────────────────────────────── */
@@ -135,8 +136,9 @@ const watchlist = (function () {
   async function deleteItem(id) {
     if (!confirm('Bu içeriği silmek istiyor musun?')) return;
     items = items.filter(it => it.id !== id);
-    await save();
+    const ok = await save();
     render();
+    if (ok) showToast('İçerik silindi.', 'info');
   }
 
   /* ── Star picker ─────────────────────────────────── */
@@ -259,9 +261,11 @@ const watchlist = (function () {
       });
     }
 
-    save().then(() => {
+    const isEdit = editingId !== null;
+    save().then(ok => {
       render();
       closeModal();
+      if (ok) showToast(isEdit ? 'İçerik güncellendi ♥' : 'Listeye eklendi ♥', 'success');
     });
   }
 

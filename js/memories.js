@@ -45,7 +45,8 @@ const memories = (function () {
   async function saveCards() {
     _lastSaveMs = Date.now();
     const ok = await storage.set(STORAGE_KEY, cards);
-    if (!ok) alert('Kayıt başarısız. Lütfen tekrar dene.');
+    if (!ok) showToast('Kayıt başarısız. Lütfen tekrar dene.', 'error');
+    return ok;
   }
 
   /* ── Dosya okuma + Storage upload ─────────────────── */
@@ -169,6 +170,7 @@ const memories = (function () {
   async function deleteCard(id) {
     if (!confirm('Bu anıyı silmek istediğine emin misin?')) return;
     await deleteById(id);
+    showToast('Anı silindi.', 'info');
   }
 
   async function deleteById(id) {
@@ -416,11 +418,13 @@ const memories = (function () {
         await persistEditCard(title, dateVal, newPhotos);
         setButtonLoading(submitBtn, false);
         closeAddModal();
+        showToast('Anı güncellendi ♥', 'success');
       } else {
         const newId = await persistNewCard(title, dateVal, newPhotos, addLoc, locName, locCoords);
         const cb    = onSavedCallback;
         setButtonLoading(submitBtn, false);
         closeAddModal();
+        showToast('Anı eklendi ♥', 'success');
         if (cb) cb(newId);
       }
     };

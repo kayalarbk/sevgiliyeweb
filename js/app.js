@@ -67,8 +67,10 @@
         try { await storage.setRaw(BG_KEY, url); } catch (_) {}
 
         if (url !== dataUrl) applyBg(url);
+        showToast('Arkaplan güncellendi ♥', 'success');
       } catch (err) {
         console.error('Arka plan güncellenemedi:', err);
+        showToast('Arkaplan güncellenemedi.', 'error');
       } finally {
         _bgUploading = false;
         setBgLoading(false);
@@ -83,6 +85,11 @@
 
     reader.readAsDataURL(file);
   }
+
+  /* ── Hareket azaltma tercihi ───────────────────────── */
+
+  const prefersReducedMotion =
+    window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* ── Kayan kalpler ─────────────────────────────────── */
 
@@ -111,10 +118,36 @@
   }
 
   function startFloatingHearts() {
+    if (prefersReducedMotion) return;
     for (let i = 0; i < HEART_BURST_COUNT; i++) {
       setTimeout(spawnHeart, i * HEART_BURST_DELAY_MS);
     }
     setInterval(spawnHeart, HEART_INTERVAL_MS);
+  }
+
+  /* ── Scroll'da bölüm belirme animasyonu ────────────── */
+
+  function initScrollReveal() {
+    const sections = document.querySelectorAll(
+      '.section-memories, .section-bucket, .section-gallery, .section-map'
+    );
+    if (!sections.length) return;
+
+    if (prefersReducedMotion || typeof IntersectionObserver === 'undefined') return;
+
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('revealed');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.08 });
+
+    sections.forEach(sec => {
+      sec.classList.add('reveal-on-scroll');
+      observer.observe(sec);
+    });
   }
 
   /* ── Bootstrap ─────────────────────────────────────── */
@@ -136,6 +169,7 @@
 
     /* Modüller — async init, fire-and-forget (kendi içlerinde hata yönetirler) */
     counter.init();
+    specialDays.init();
     player.init();
     tabs.init();
     bucket.init();
@@ -150,6 +184,9 @@
 
     /* Kayan kalpler */
     startFloatingHearts();
+
+    /* Scroll'da bölüm belirme */
+    initScrollReveal();
 
     /* Aktif nav link */
     const sections = [

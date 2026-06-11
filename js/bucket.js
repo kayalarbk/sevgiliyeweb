@@ -24,7 +24,8 @@ const bucket = (function () {
   async function save() {
     _lastSaveMs = Date.now();
     const ok = await storage.set(STORAGE_KEY, items);
-    if (!ok) alert('Kayıt başarısız. Lütfen tekrar dene.');
+    if (!ok) showToast('Kayıt başarısız. Lütfen tekrar dene.', 'error');
+    return ok;
   }
 
   /* ── Dosya okuma + Storage upload ─────────────────── */
@@ -135,8 +136,9 @@ const bucket = (function () {
   async function deleteItem(id) {
     if (!confirm('Bu planı silmek istiyor musun?')) return;
     items = items.filter(it => it.id !== id);
-    await save();
+    const ok = await save();
     render();
+    if (ok) showToast('Plan silindi.', 'info');
   }
 
   /* ── Add / Edit modal ────────────────────────────── */
@@ -176,7 +178,8 @@ const bucket = (function () {
     if (!title) { document.getElementById('bucketTitle').focus(); return; }
 
     const persist = async (photoUrl) => {
-      if (editingId !== null) {
+      const isEdit = editingId !== null;
+      if (isEdit) {
         items = items.map(it => {
           if (it.id !== editingId) return it;
           return { ...it, title, photo: photoUrl !== null ? photoUrl : it.photo };
@@ -185,10 +188,11 @@ const bucket = (function () {
         const currentUser = (typeof auth !== 'undefined') ? auth.getUser() : null;
         items.unshift({ id: Date.now(), title, photo: photoUrl, done: false, addedBy: currentUser ? currentUser.username : '' });
       }
-      await save();
+      const ok = await save();
       render();
       setButtonLoading(submitBtn, false);
       closeAddModal();
+      if (ok) showToast(isEdit ? 'Plan güncellendi ♥' : 'Plan eklendi ♥', 'success');
     };
 
     if (fileInput.files.length) {
