@@ -33,12 +33,13 @@ const memories = (function () {
   async function loadCards() {
     const parsed = await storage.get(STORAGE_KEY, []);
     cards = parsed.map(c => ({
-      id:         c.id,
-      title:      c.title,
-      date:       c.date,
-      photos:     c.photos || (c.photo ? [c.photo] : []),
-      locationId: c.locationId || null,
-      addedBy:    c.addedBy   || '',
+      id:          c.id,
+      title:       c.title,
+      date:        c.date,
+      photos:      c.photos || (c.photo ? [c.photo] : []),
+      locationId:  c.locationId  || null,
+      addedBy:     c.addedBy     || '',
+      description: c.description || '',
     }));
   }
 
@@ -301,10 +302,17 @@ const memories = (function () {
     if (cb) cb.checked = false;
   }
 
+  function syncDescCount() {
+    const descEl  = document.getElementById('memoryDescription');
+    const countEl = document.getElementById('memDescCount');
+    if (descEl && countEl) countEl.textContent = descEl.value.length;
+  }
+
   function resetModal() {
     document.getElementById('memoryForm').reset();
     hideLocationFields();
     resetMiniMap();
+    syncDescCount();
     document.body.style.overflow = '';
   }
 
@@ -341,6 +349,8 @@ const memories = (function () {
     document.getElementById('modalTitle').textContent   = 'Anıyı Düzenle';
     document.getElementById('memoryTitle').value = card.title || '';
     document.getElementById('memoryDate').value  = card.date  || '';
+    document.getElementById('memoryDescription').value = card.description || '';
+    syncDescCount();
     document.getElementById('memoryPhoto').value = '';
     hideLocationFields();
     document.getElementById('addMemoryModal').classList.add('open');
@@ -358,10 +368,10 @@ const memories = (function () {
 
   /* ── Form gönderimi ──────────────────────────────── */
 
-  async function persistNewCard(title, dateVal, newPhotos, addLoc, locName, locCoords) {
+  async function persistNewCard(title, dateVal, description, newPhotos, addLoc, locName, locCoords) {
     const newId      = Date.now();
     const currentUser = (typeof auth !== 'undefined') ? auth.getUser() : null;
-    const newCard = { id: newId, title, date: dateVal, photos: newPhotos, locationId: null, addedBy: currentUser ? currentUser.username : '' };
+    const newCard = { id: newId, title, date: dateVal, description, photos: newPhotos, locationId: null, addedBy: currentUser ? currentUser.username : '' };
     cards.unshift(newCard);
     await saveCards();
     renderCards();
@@ -385,13 +395,14 @@ const memories = (function () {
     return newId;
   }
 
-  async function persistEditCard(title, dateVal, newPhotos) {
+  async function persistEditCard(title, dateVal, description, newPhotos) {
     cards = cards.map(c => {
       if (c.id !== editingId) return c;
       return {
         ...c,
         title,
-        date:   dateVal,
+        date:        dateVal,
+        description,
         photos: newPhotos.length ? [...c.photos, ...newPhotos] : c.photos,
       };
     });
@@ -404,6 +415,7 @@ const memories = (function () {
 
     const title     = document.getElementById('memoryTitle').value.trim();
     const dateVal   = document.getElementById('memoryDate').value;
+    const descVal   = document.getElementById('memoryDescription').value.trim().slice(0, 300);
     const fileInput = document.getElementById('memoryPhoto');
     const submitBtn = e.target.querySelector('button[type="submit"]');
 
@@ -415,12 +427,12 @@ const memories = (function () {
 
     const done = async (newPhotos) => {
       if (editingId !== null) {
-        await persistEditCard(title, dateVal, newPhotos);
+        await persistEditCard(title, dateVal, descVal, newPhotos);
         setButtonLoading(submitBtn, false);
         closeAddModal();
         showToast('Anı güncellendi ♥', 'success');
       } else {
-        const newId = await persistNewCard(title, dateVal, newPhotos, addLoc, locName, locCoords);
+        const newId = await persistNewCard(title, dateVal, descVal, newPhotos, addLoc, locName, locCoords);
         const cb    = onSavedCallback;
         setButtonLoading(submitBtn, false);
         closeAddModal();
@@ -471,6 +483,7 @@ const memories = (function () {
     subscribeRealtime();
 
     document.getElementById('btnAddMemory').addEventListener('click', openAddModal);
+    document.getElementById('memoryDescription').addEventListener('input', syncDescCount);
     document.getElementById('closeAddMemory').addEventListener('click', closeAddModal);
     document.getElementById('memoryForm').addEventListener('submit', handleFormSubmit);
     document.getElementById('lightboxClose').addEventListener('click', closeLightbox);

@@ -16,7 +16,9 @@
       "Bash(npm root *)",
       "Bash(ls \"$\\(npm root -g\\)/playwright\")",
       "Bash(node -e \"require.resolve\\('playwright'\\)\")",
-      "Bash(vercel *)"
+      "Bash(vercel *)",
+      "Bash(dir /s \"c:\\\\Users\\\\baris\\\\Desktop\\\\Projeler\\\\love-app\")",
+      "PowerShell(git *)"
     ]
   }
 }

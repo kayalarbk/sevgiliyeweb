@@ -358,6 +358,22 @@
   cursor: pointer;
 }
 
+/* Açıklama alanı — main.css'teki .form-textarea'yı anı formuna uyarlar */
+.memory-form .form-textarea {
+  background: #2a1020; /* diğer form inputlarıyla aynı zemin */
+  max-height: 160px;
+  font-family: var(--font-main);
+  line-height: 1.5;
+}
+
+.form-char-count {
+  display: block;
+  text-align: right;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
 .btn-save-memory {
   padding: 13px;
   background: var(--color-primary);

@@ -296,6 +296,18 @@
           <input type="text" id="memoryTitle" placeholder="İlk randevumuz…" autocomplete="off" required />
         </div>
         <div class="form-field">
+          <label for="memoryDescription">Açıklama</label>
+          <textarea
+            id="memoryDescription"
+            name="description"
+            class="form-textarea"
+            placeholder="Bu anıyı anlat... 💭"
+            rows="3"
+            maxlength="300"
+          ></textarea>
+          <span class="form-char-count"><span id="memDescCount">0</span>/300</span>
+        </div>
+        <div class="form-field">
           <label for="memoryDate">Tarih</label>
           <input type="date" id="memoryDate" />
         </div>
