@@ -3,6 +3,6 @@
 const APP_CONFIG = {
   users: [
     { username: 'barışkaya',password: 'bk150824' },
-    { username: 'derinbeyzagünal', password: 'dbk150824'  },
+    { username: 'derinbeyzagünal', password: 'dbk200724'  },
   ],
 };
